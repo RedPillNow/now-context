@@ -1,4 +1,3 @@
-/// <reference path="bower_components/polymer-ts/polymer-ts.d.ts"/>
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -16,7 +15,6 @@ var BasicAppLayout = (function (_super) {
         _super.apply(this, arguments);
     }
     BasicAppLayout = __decorate([
-        /// <reference path="bower_components/polymer-ts/polymer-ts.d.ts"/>
         component('now-basic-app-layout')
     ], BasicAppLayout);
     return BasicAppLayout;
