@@ -14,10 +14,14 @@ var BasicAppLayout = (function (_super) {
     function BasicAppLayout() {
         _super.apply(this, arguments);
     }
+    __decorate([
+        property({ type: String })
+    ], BasicAppLayout.prototype, "prop1", void 0);
     BasicAppLayout = __decorate([
         component('now-basic-app-layout')
     ], BasicAppLayout);
     return BasicAppLayout;
 }(polymer.Base));
 BasicAppLayout.register();
+
 //# sourceMappingURL=now-basic-app-layout.js.map
