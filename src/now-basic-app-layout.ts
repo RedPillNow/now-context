@@ -1,10 +1,11 @@
-/// <reference path="../bower_components/polymer-ts/polymer-ts.d.ts"/>
+/// <reference path="bower_components/polymer-ts/polymer-ts.d.ts"/>
 
-@component('now-basic-app-layout')
-class BasicAppLayout extends polymer.Base {
+namespace NowElements {
+	@component('now-basic-app-layout')
+	export class BasicAppLayout extends polymer.Base {
 
-	@property({type:String})
-	prop1: string;
+		@property({type: String})
+		prop1: string;
+	}
 }
-
-BasicAppLayout.register();
+NowElements.BasicAppLayout.register();

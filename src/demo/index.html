@@ -4,22 +4,23 @@
 	<title>now-basic-app-layout demo</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
-	<script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+	<script src="../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
 
-	<link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
-	<link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+	<link rel="import" href="../bower_components/iron-demo-helpers/demo-pages-shared-styles.html">
+	<link rel="import" href="../bower_components/iron-demo-helpers/demo-snippet.html">
 
 	<link rel="import" href="../now-basic-app-layout.html">
 
 	<style is="custom-style" include="demo-pages-shared-styles">
-		demo-snippet {
-			width: 100%
+		#mainDiv {
+			width: 80%;
+			max-width: 80%;
 		}
 	</style>
 </head>
 <body>
 
-<div class="vertical-section-container centered">
+<div id="mainDiv" class="vertical-section-container centered">
 	<h3>Basic now-basic-app-layout Demo</h3>
 
 	<demo-snippet>

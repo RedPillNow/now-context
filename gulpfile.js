@@ -209,7 +209,7 @@ gulp.task('fonts', function() {
 // Scan your HTML for assets & optimize them
 gulp.task('html', function() {
 	return optimizeHtmlTask(
-		['src/**/*.html', '!src/{elements,test,bower_components}/**/*.html'],
+		['src/**/*.html', '!src/{test,bower_components}/**/*.html'],
 		dist());
 });
 
@@ -220,7 +220,7 @@ gulp.task("install-typings", function() {
 
 // Clean output directory
 gulp.task('clean', function() {
-	return del(['.tmp', dist(), 'src/{test,elements}/**/*.{js,map}']);
+	return del(['.tmp', dist(), 'src/{.,test,demo}/**/*.{js,map}']);
 });
 
 // Watch files for changes & reload
@@ -310,9 +310,9 @@ gulp.task('default', ['clean'], function(cb) {
 // Adds tasks for `gulp test:local` and `gulp test:remote`
 require('web-component-tester').gulp.init(gulp);
 
-// Load custom tasks from the `tasks` directory
+// Load custom tasks from the `gulp-tasks` directory
 try {
-	require('require-dir')('tasks');
+	require('require-dir')('gulp-tasks');
 } catch (err) {
 	// Do nothing
 }
