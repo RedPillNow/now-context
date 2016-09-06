@@ -169,31 +169,17 @@ gulp.task('images', function() {
 	return imageOptimizeTask('src/images/**/*', dist('images'));
 });
 
-// Copy all files at the root level (src)
+// Copy all files at the root level (src) to the dist folder
 gulp.task('copy', function() {
-	var src = gulp.src([
-		'src/*',
-		'src/**/images/*',
-		'src/**/styles/*',
-		'!src/demo',
-		'!src/test',
+	return gulp.src([
+		'index.html',
+		'src/**',
+		'!src/bower_components/**/*',
 		'!src/bower_components',
 		'!**/.DS_Store'
 	], {
 		dot: true
-	}).pipe(gulp.dest(dist()));
-
-	// Copy over only the bower_components we need
-	// These are things which cannot be vulcanized
-	var bower = gulp.src([
-		'src/bower_components/{webcomponentsjs,platinum-sw,sw-toolbox,promise-polyfill}/**/*'
-	]).pipe(plumber({errorHandler: handleError}))
-		.pipe(gulp.dest(dist('bower_components')));
-
-	return merge(src, bower)
-		.pipe(size({
-			title: 'copy'
-		}));
+	}).pipe(plumber({errorHandler: handleError})).pipe(gulp.dest(dist()));
 });
 
 // Copy web fonts to dist
@@ -209,7 +195,7 @@ gulp.task('fonts', function() {
 // Scan your HTML for assets & optimize them
 gulp.task('html', function() {
 	return optimizeHtmlTask(
-		['src/**/*.html', '!src/{test,bower_components}/**/*.html'],
+		['src/**/*.html', '!src/{test,demo,bower_components}/**/*.html'],
 		dist());
 });
 
@@ -257,51 +243,11 @@ gulp.task('serve', ['styles', 'typescript'], function() {
 	gulp.watch(['src/images/**/*'], reload);
 });
 
-// Build and serve the output from the dist build
-gulp.task('serve:dist', ['default'], function() {
-	browserSync({
-		port: 5001,
-		notify: false,
-		logPrefix: 'PSK',
-		snippetOptions: {
-			rule: {
-				match: '<span id="browser-sync-binding"></span>',
-				fn: function(snippet) {
-					return snippet;
-				}
-			}
-		},
-		// Run as an https by uncommenting 'https: true'
-		// Note: this uses an unsigned certificate which on first access
-		//       will present a certificate warning in the browser.
-		// https: true,
-		server: dist(),
-		middleware: [historyApiFallback()]
-	});
-});
-
-// Serve + tests
-gulp.task('serve:tests', function(cb) {
-	runSequence(
-		'serve',
-		'wct',
-		cb);
-});
-
-// Serve:dist + tests
-gulp.task('serve:dist:tests', function(cb) {
-	runSequence(
-		'serve:dist',
-		'wct',
-		cb);
-});
-
 // Build production files, the default task
 gulp.task('default', ['clean'], function(cb) {
-	// Uncomment 'cache-config' if you are going to use service workers.
 	runSequence(
-		['ensureFiles', 'copy', 'styles'],
 		['typescript'],
+		['ensureFiles', 'copy', 'styles'],
 		['images', 'fonts', 'html'],
 		cb);
 });
