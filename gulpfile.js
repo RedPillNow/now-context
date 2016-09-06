@@ -62,6 +62,8 @@ var AUTOPREFIXER_BROWSERS = [
 
 var DIST = 'dist';
 
+var src = '.';
+
 var dist = function(subpath) {
 	return !subpath ? DIST : path.join(DIST, subpath);
 };
@@ -77,7 +79,7 @@ function handleError(error) {
 
 var styleTask = function(stylesPath, srcs) {
 	return gulp.src(srcs.map(function(src) {
-		return path.join('src', stylesPath, src);
+		return path.join(src, stylesPath, src);
 	}))
 		.pipe(plumber({errorHandler: handleError}))
 		.pipe(changed(stylesPath, {extension: '.css'}))
@@ -101,7 +103,7 @@ var imageOptimizeTask = function(src, dest) {
 
 var optimizeHtmlTask = function(src, dest) {
 	var assets = useref.assets({
-		searchPath: ['.tmp', 'src']
+		searchPath: ['.tmp', src]
 	});
 
 	return gulp.src(src)
@@ -130,9 +132,9 @@ var optimizeHtmlTask = function(src, dest) {
 };
 
 gulp.task('typescript', function() {
-	var destDir = 'src';
+	var destDir = src;
 
-	return gulp.src(['src/**/*.ts', '!src/bower_components/**/*'])
+	return gulp.src([src + '/**/*.ts', '!' + src + '/bower_components/**/*', '!' + src + '/node_modules/**/*'])
 		.pipe(plumber({errorHandler: handleError}))
 		.pipe(sourcemaps.init())
 		.pipe(ts(tsProject))
@@ -141,7 +143,7 @@ gulp.task('typescript', function() {
 });
 
 // gulp.task('polylint', function() {
-// 	return gulp.src(['src/elements/**/*.html', '!src/elements/elements.html'])
+// 	return gulp.src([src + '/elements/**/*.html', '!' + src + '/elements/elements.html'])
 // 		.pipe(plumber({errorHandler: handleError}))
 // 		.pipe(polylint())
 // 		.pipe(polylint.reporter(polylint.reporter.stylishlike))
@@ -166,16 +168,16 @@ gulp.task('ensureFiles', function(cb) {
 
 // Optimize images
 gulp.task('images', function() {
-	return imageOptimizeTask('src/images/**/*', dist('images'));
+	return imageOptimizeTask(src + '/images/**/*', dist('images'));
 });
 
 // Copy all files at the root level (src) to the dist folder
 gulp.task('copy', function() {
 	return gulp.src([
 		'index.html',
-		'src/**',
-		'!src/bower_components/**/*',
-		'!src/bower_components',
+		src + '/**',
+		'!' + src + '/bower_components/**/*',
+		'!' + src + '/bower_components',
 		'!**/.DS_Store'
 	], {
 		dot: true
@@ -184,7 +186,7 @@ gulp.task('copy', function() {
 
 // Copy web fonts to dist
 gulp.task('fonts', function() {
-	return gulp.src(['src/fonts/**'])
+	return gulp.src([src + '/fonts/**'])
 		.pipe(plumber({errorHandler: handleError}))
 		.pipe(gulp.dest(dist('fonts')))
 		.pipe(size({
@@ -195,7 +197,7 @@ gulp.task('fonts', function() {
 // Scan your HTML for assets & optimize them
 gulp.task('html', function() {
 	return optimizeHtmlTask(
-		['src/**/*.html', '!src/{test,demo,bower_components}/**/*.html'],
+		[src + '/**/*.html', '!' + src + '/{test,demo,bower_components}/**/*.html'],
 		dist());
 });
 
@@ -206,7 +208,7 @@ gulp.task("install-typings", function() {
 
 // Clean output directory
 gulp.task('clean', function() {
-	return del(['.tmp', dist(), 'src/{.,test,demo}/**/*.{js,map}']);
+	return del(['.tmp', dist(), src + '/{test,demo}/**/*.{js,map}']);
 });
 
 // Watch files for changes & reload
@@ -237,10 +239,10 @@ gulp.task('serve', ['styles', 'typescript'], function() {
 	});
 
 	gulp.watch(['*.html'], [reload]);
-	gulp.watch(['src/**/*.html'], ['typescript', reload]);
-	gulp.watch(['src/styles/**/*.css'], ['styles', reload]);
-	gulp.watch(['src/**/*.ts'], ['typescript', reload]);
-	gulp.watch(['src/images/**/*'], reload);
+	gulp.watch([src + '/**/*.html'], ['typescript', reload]);
+	gulp.watch([src + '/styles/**/*.css'], ['styles', reload]);
+	gulp.watch([src + '/**/*.ts'], ['typescript', reload]);
+	gulp.watch([src + '/images/**/*'], reload);
 });
 
 // Build production files, the default task

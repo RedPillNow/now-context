@@ -16,6 +16,6 @@
 		".idea",
 		"tasks",
 		"node_modules",
-		"src/bower_components"
+		"bower_components"
 	]
 }

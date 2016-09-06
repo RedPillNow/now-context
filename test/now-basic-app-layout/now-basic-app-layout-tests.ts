@@ -1,4 +1,4 @@
-/// <reference path="../../../typings/index.d.ts"/>
+/// <reference path="../../typings/index.d.ts"/>
 /// <reference path="../../now-basic-app-layout.ts"/>
 
 /* No TS definitions for WebComponentTester, so use declare. */
@@ -7,7 +7,7 @@
  declare var stub;
 
 /**
- * Tests for my-view1.
+ * Tests for now-basic-app-layout.
  */
 describe('now-basic-app-layout-test tests', function () {
 	let element: NowElements.BasicAppLayout;

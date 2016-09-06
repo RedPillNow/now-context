@@ -27,5 +27,4 @@ var NowElements;
     NowElements.BasicAppLayout = BasicAppLayout;
 })(NowElements || (NowElements = {}));
 NowElements.BasicAppLayout.register();
-
 //# sourceMappingURL=now-basic-app-layout.js.map
