@@ -66,7 +66,7 @@ var AUTOPREFIXER_BROWSERS = [
 
 var DIST = 'dist';
 
-var src = '.';
+var src = 'src';
 
 var dist = function(subpath) {
 	return !subpath ? DIST : path.join(DIST, subpath);
@@ -212,14 +212,26 @@ gulp.task('images', function() {
 // Copy all files at the root level (src) to the dist folder
 gulp.task('copy', function() {
 	return gulp.src([
+		'README.md',
+		'bower.json',
 		'index.html',
 		src + '/**',
-		'!' + src + '/bower_components/**/*',
-		'!' + src + '/bower_components',
+		'!' + src + '/bower_components{,/**}',
+		'!' + src + '/test{,/**}',
+		'!' + src + '/demo{,/**}',
 		'!**/.DS_Store'
 	], {
 		dot: true
 	}).pipe(plumber({errorHandler: handleError})).pipe(gulp.dest(dist()));
+});
+
+// Replace local paths with ones that should work when installed via bower
+gulp.task('replacePaths', function() {
+	return gulp.src([dist() + "/*"]).
+	pipe(plumber({errorHandler: handleError})).
+	pipe(replace(src, '')).
+	pipe(replace('bower_components', '..')).
+	pipe(gulp.dest(dist()));
 });
 
 // Copy web fonts to dist
@@ -239,14 +251,14 @@ gulp.task('html', function() {
 		dist());
 });
 
-gulp.task("install-typings", function() {
+gulp.task("installTypings", function() {
 	return gulp.src("./typings.json")
 		.pipe(gulpTypings());
 });
 
 // Clean output directory
 gulp.task('clean', function() {
-	return del(['.tmp', dist(), src + '/{test,demo}/**/*.{js,map}']);
+	return del(['.tmp', dist(), src + '/{src.test,src.demo}/**/*.{js,map}']);
 });
 
 // Watch files for changes & reload
@@ -271,7 +283,7 @@ gulp.task('serve', ['styles', 'typescript', 'getBuildProperties'], function() {
 		server: {
 			baseDir: ['.tmp', '.'],
 			routes: {
-				'/': 'bower_components'
+				'/src/': '/src/bower_components'
 			},
 			index: 'index.html',
 			directory: true,
@@ -291,12 +303,12 @@ gulp.task('default', ['clean'], function(cb) {
 	runSequence(
 		['typescript'],
 		['ensureFiles', 'copy', 'styles'],
-		['images', 'fonts', 'html'],
+		['replacePaths', 'images', 'fonts'],
 		cb);
 });
 
 // Load tasks for web-component-tester
-// Adds tasks for `gulp test:local` and `gulp test:remote`
+// Adds tasks for `gulp src.test:local` and `gulp src.test:remote`
 require('web-component-tester').gulp.init(gulp);
 
 // Load custom tasks from the `gulp-tasks` directory

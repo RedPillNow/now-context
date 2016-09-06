@@ -8,8 +8,12 @@
 		"sourceMap": true,
 		"experimentalDecorators": true,
 		"listFiles": true,
-		"noEmitOnError": true
+		"noEmitOnError": true,
+		"declaration": true
 	},
+	"files": [
+		"now-basic-app-layout.ts"
+	],
 	"exclude": [
 		"dist",
 		".tmp",
