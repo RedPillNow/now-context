@@ -26,6 +26,7 @@ var historyApiFallback = require('connect-history-api-fallback');
 var packageJson = require('./package.json');
 var crypto = require('crypto');
 var ensureFiles = require('./gulp-tasks/ensure-files.js');
+var props = require('properties');
 var url = require('url');
 var proxy = require('proxy-middleware');
 var replace = require('gulp-replace');
@@ -41,12 +42,15 @@ var changed = require('gulp-changed');
 var autoprefixer = require('gulp-autoprefixer');
 var imagemin = require('gulp-imagemin');
 var uglify = require('gulp-uglify');
+var util = require('gulp-util');
 //var polylint = require('gulp-polylint');
 
 // TypeScript support
 var sourcemaps = require('gulp-sourcemaps');
 var ts = require('gulp-typescript');
 var tsProject = ts.createProject('tsconfig.json');
+
+var buildProps = null;
 
 var AUTOPREFIXER_BROWSERS = [
 	'ie >= 10',
@@ -75,6 +79,31 @@ function handleError(error) {
 	console.log("Error (ending current task):", error.message);
 	this.emit("end"); //End function
 	process.exit(1);
+}
+
+/** Configures proxy for use with BrowserSync. The getBuildProperties task must be called first. */
+function getProxies() {
+	var apiHost = buildProps.apiHost;
+	var apiProxyOptions;
+	var namesProxyOptions;
+	var domCfgProxyOptions;
+	if (apiHost) {
+		apiProxyOptions = url.parse('http://' + apiHost + '/api');
+		apiProxyOptions.route = '/api';
+		apiProxyOptions.cookieRewrite = apiHost;
+
+		namesProxyOptions = url.parse('http://' + apiHost + '/names.nsf');
+		namesProxyOptions.route = '/names.nsf';
+		namesProxyOptions.cookieRewrite = apiHost;
+
+		domCfgProxyOptions = url.parse('http://' + apiHost + '/domcfg.nsf');
+		domCfgProxyOptions.route = '/domcfg.nsf';
+		domCfgProxyOptions.cookieRewrite = apiHost;
+
+		return [proxy(apiProxyOptions), proxy(domCfgProxyOptions),
+			proxy(namesProxyOptions), historyApiFallback()
+		];
+	}
 }
 
 var styleTask = function(stylesPath, srcs) {
@@ -130,6 +159,15 @@ var optimizeHtmlTask = function(src, dest) {
 			title: 'html'
 		}));
 };
+
+// Get the properties
+gulp.task('getBuildProperties', function(callback) {
+	props.parse('build.properties', {path: true}, function(err, obj) {
+		buildProps = obj;
+		util.log(util.colors.magenta('build.properties loaded!'));
+		callback(err);
+	});
+});
 
 gulp.task('typescript', function() {
 	var destDir = src;
@@ -212,7 +250,7 @@ gulp.task('clean', function() {
 });
 
 // Watch files for changes & reload
-gulp.task('serve', ['styles', 'typescript'], function() {
+gulp.task('serve', ['styles', 'typescript', 'getBuildProperties'], function() {
 
 	browserSync({
 		port: 5000,
@@ -232,9 +270,12 @@ gulp.task('serve', ['styles', 'typescript'], function() {
 		// https: true,
 		server: {
 			baseDir: ['.tmp', '.'],
+			routes: {
+				'/': 'bower_components'
+			},
 			index: 'index.html',
 			directory: true,
-			middleware: [historyApiFallback()]
+			middleware: getProxies()
 		}
 	});
 

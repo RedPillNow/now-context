@@ -14,4 +14,5 @@ describe('now-basic-app-layout-test tests', function () {
         chai.expect(element.is).equals('now-basic-app-layout');
     });
 });
+
 //# sourceMappingURL=now-basic-app-layout-tests.js.map
