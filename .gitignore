@@ -1,0 +1,10 @@
+node_modules/
+bower_components/
+*.log
+.idea/
+typings/
+/now-basic-app-layout.iml
+.DS_Store
+_SpecRunner.html
+src/**/*.js
+src/**/*.js.map
