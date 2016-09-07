@@ -8,9 +8,10 @@
 		"sourceMap": true,
 		"experimentalDecorators": true,
 		"listFiles": true,
-		"noEmitOnError": true
+		"noEmitOnError": true,
+		"declaration": true
 	},
 	"files": [
-		"src/now-starter-element.ts"
+		"now-starter-element.ts"
 	]
 }

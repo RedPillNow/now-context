@@ -1,4 +1,4 @@
-/// <reference path="../../../typings/index.d.ts"/>
+/// <reference path="../../typings/index.d.ts"/>
 /// <reference path="../../now-starter-element.ts"/>
 
 /* No TS definitions for WebComponentTester, so use declare. */
