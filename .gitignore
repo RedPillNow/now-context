@@ -6,5 +6,3 @@ typings/
 /now-starter-element.iml
 .DS_Store
 _SpecRunner.html
-src/**/*.js
-src/**/*.js.map
