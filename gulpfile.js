@@ -272,6 +272,8 @@ gulp.task('serve', ['styles', 'typescript', 'getBuildProperties'], function() {
 		port: 5000,
 		notify: false,
 		logPrefix: 'PSK',
+		logLevel: 'debug',
+		logConnections: true,
 		snippetOptions: {
 			rule: {
 				match: '<span id="browser-sync-binding"></span>',
@@ -287,7 +289,7 @@ gulp.task('serve', ['styles', 'typescript', 'getBuildProperties'], function() {
 		server: {
 			baseDir: ['.tmp', '.'],
 			routes: {
-				'/src/': '/src/bower_components'
+				'/': 'bower_components/'
 			},
 			index: 'index.html',
 			directory: true,
@@ -296,9 +298,8 @@ gulp.task('serve', ['styles', 'typescript', 'getBuildProperties'], function() {
 	});
 
 	gulp.watch(['*.html'], [reload]);
-	gulp.watch([src + '/**/*.html'], ['typescript', reload]);
+	gulp.watch(['{' + src + ',demo,test}/**/*.{ts,html}'], ['typescript', reload]);
 	gulp.watch([src + '/styles/**/*.css'], ['styles', reload]);
-	gulp.watch([src + '/**/*.ts'], ['typescript', reload]);
 	gulp.watch([src + '/images/**/*'], reload);
 });
 
