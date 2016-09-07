@@ -8,18 +8,9 @@
 		"sourceMap": true,
 		"experimentalDecorators": true,
 		"listFiles": true,
-		"noEmitOnError": true,
-		"declaration": true
+		"noEmitOnError": true
 	},
 	"files": [
-		"now-basic-app-layout.ts"
-	],
-	"exclude": [
-		"dist",
-		".tmp",
-		".idea",
-		"tasks",
-		"node_modules",
-		"bower_components"
+		"src/now-basic-app-layout.ts"
 	]
 }

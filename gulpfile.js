@@ -32,6 +32,7 @@ var proxy = require('proxy-middleware');
 var replace = require('gulp-replace');
 var plumber = require('gulp-plumber');
 var gulpIf = require('gulp-if');
+var gulpIgnore = require('gulp-ignore');
 var size = require('gulp-size');
 var minifyHtml = require('gulp-minify-html');
 var htmlmin = require('gulp-htmlmin');
@@ -49,6 +50,8 @@ var util = require('gulp-util');
 var sourcemaps = require('gulp-sourcemaps');
 var ts = require('gulp-typescript');
 var tsProject = ts.createProject('tsconfig.json');
+// generate .d.ts files
+tsProject.options.declaration = true;
 
 var buildProps = null;
 
@@ -172,12 +175,15 @@ gulp.task('getBuildProperties', function(callback) {
 gulp.task('typescript', function() {
 	var destDir = src;
 
-	return gulp.src([src + '/**/*.ts', '!' + src + '/bower_components/**/*', '!' + src + '/node_modules/**/*'])
+	var tsResult = gulp.src([src + '/**/*.ts', '!' + src + '/bower_components/**/*', '!' + src + '/node_modules/**/*'])
 		.pipe(plumber({errorHandler: handleError}))
 		.pipe(sourcemaps.init())
-		.pipe(ts(tsProject))
-		.pipe(sourcemaps.write('.'))
-		.pipe(gulp.dest(destDir));
+		.pipe(ts(tsProject));
+
+	return merge([
+		tsResult.dts.pipe(gulpIgnore.exclude(src + '/test/**/*')).pipe(gulp.dest(dist())),
+		tsResult.js.pipe(sourcemaps.write('.')).pipe(gulp.dest(destDir))
+	]);
 });
 
 // gulp.task('polylint', function() {
@@ -216,9 +222,7 @@ gulp.task('copy', function() {
 		'bower.json',
 		'index.html',
 		src + '/**',
-		'!' + src + '/bower_components{,/**}',
-		'!' + src + '/test{,/**}',
-		'!' + src + '/demo{,/**}',
+		'!' + src + '/{bower_components,demo,test}{,/**}',
 		'!**/.DS_Store'
 	], {
 		dot: true
@@ -258,7 +262,7 @@ gulp.task("installTypings", function() {
 
 // Clean output directory
 gulp.task('clean', function() {
-	return del(['.tmp', dist(), src + '/{src.test,src.demo}/**/*.{js,map}']);
+	return del(['.tmp', dist(), src + '/{test,demo}/**/*.{js,map,d.ts}', src + '/*.{js,map,d.ts}']);
 });
 
 // Watch files for changes & reload
@@ -308,7 +312,7 @@ gulp.task('default', ['clean'], function(cb) {
 });
 
 // Load tasks for web-component-tester
-// Adds tasks for `gulp src.test:local` and `gulp src.test:remote`
+// Adds tasks for `gulp test:local` and `gulp test:remote`
 require('web-component-tester').gulp.init(gulp);
 
 // Load custom tasks from the `gulp-tasks` directory
