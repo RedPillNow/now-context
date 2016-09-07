@@ -3,7 +3,7 @@ bower_components/
 *.log
 .idea/
 typings/
-/now-basic-app-layout.iml
+/now-starter-element.iml
 .DS_Store
 _SpecRunner.html
 src/**/*.js

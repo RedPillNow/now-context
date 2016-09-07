@@ -1,5 +1,5 @@
 {
-  "name": "now-basic-app-layout",
+  "name": "now-starter-element",
   "version": "0.0.0",
   "description": "Simple layout element with common CSS to be used for simpler Red Pill Now applications.",
   "engines": {

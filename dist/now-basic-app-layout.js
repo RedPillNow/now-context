@@ -20,7 +20,7 @@ var NowElements;
             property({ type: String })
         ], BasicAppLayout.prototype, "prop1", void 0);
         BasicAppLayout = __decorate([
-            component('now-basic-app-layout')
+            component('now-starter-element')
         ], BasicAppLayout);
         return BasicAppLayout;
     }(polymer.Base));
@@ -28,4 +28,4 @@ var NowElements;
 })(NowElements || (NowElements = {}));
 NowElements.BasicAppLayout.register();
 
-//# sourceMappingURL=now-basic-app-layout.js.map
+//# sourceMappingURL=now-starter-element.js.map

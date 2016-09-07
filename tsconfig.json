@@ -11,6 +11,6 @@
 		"noEmitOnError": true
 	},
 	"files": [
-		"src/now-basic-app-layout.ts"
+		"src/now-starter-element.ts"
 	]
 }

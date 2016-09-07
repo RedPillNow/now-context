@@ -1,7 +1,7 @@
 {
-	"name": "now-basic-app-layout",
+	"name": "now-starter-element",
 	"description": "Simple layout element with common CSS to be used for simpler Red Pill Now applications.",
-	"main": "now-basic-app-layout.html",
+	"main": "now-starter-element.html",
 	"dependencies": {
 		"polymer": "Polymer/polymer#^1.4.0"
 	},
@@ -13,6 +13,6 @@
 		"polymer-ts": "^0.1.28"
 	},
 	"typescript": {
-		"definition": "now-basic-app-layout.d.ts"
+		"definition": "now-starter-element.d.ts"
 	}
 }

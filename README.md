@@ -1,4 +1,4 @@
-# <now-basic-app-layout\>
+# <now-starter-element\>
 
 Simple layout element with common CSS to be used for simpler Red Pill Now applications.
 

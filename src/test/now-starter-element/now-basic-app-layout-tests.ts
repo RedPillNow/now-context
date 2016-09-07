@@ -1,5 +1,5 @@
 /// <reference path="../../../typings/index.d.ts"/>
-/// <reference path="../../now-basic-app-layout.ts"/>
+/// <reference path="../../now-starter-element.ts"/>
 
 /* No TS definitions for WebComponentTester, so use declare. */
  declare var fixture;
@@ -7,9 +7,9 @@
  declare var stub;
 
 /**
- * Tests for now-basic-app-layout.
+ * Tests for now-starter-element.
  */
-describe('now-basic-app-layout-src.test tests', function () {
+describe('now-starter-element-src.test tests', function () {
 	let element: NowElements.BasicAppLayout;
 
 	before(function () {
@@ -27,6 +27,6 @@ describe('now-basic-app-layout-src.test tests', function () {
 
 	it('should be instantiated', function() {
 		var element = fixture('basic');
-		chai.expect(element.is).equals('now-basic-app-layout');
+		chai.expect(element.is).equals('now-starter-element');
 	});
 });
