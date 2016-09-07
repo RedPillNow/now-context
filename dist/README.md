@@ -43,8 +43,15 @@ You can also run Gulp from the command line; here are some common tasks:
 `gulp serve` - Builds the component and runs a local web server (usually on port 5000) that will automatically reload changes you make on disk in the browser.
 After you run this command, just open your browser to `http://localhost:5000/`. The page should refresh automatically when you change the source.
 
-`gulp` - Default target; builds the component (minifying it, etc.) and places it in the `dist` folder.
+`gulp` - Default target; builds the component for distribution and and places it in the `dist` folder.
 
-`default` Runs the default target and then runs the server on port 5001. This is the production build with "vulcanized" files. 
+`test` - Run the tests
+ 
+NOTE: Make sure you check in the `dist` folder once you have a build ready for distribution. This is what is used by bower.
 
 You can see the other tasks (such as `clean`) in the `gulpfile.js`.
+
+## Customizing 
+
+To customize the project, just replace 'now-starter-element' with the name of your element (this includes file names as well as text inside of .html and .ts files). 
+You will want to rename the TypeScript class as well.
