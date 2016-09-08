@@ -3,6 +3,6 @@ bower_components/
 *.log
 .idea/
 typings/
-/now-starter-element.iml
+*.iml
 .DS_Store
 _SpecRunner.html
