@@ -50,9 +50,6 @@ var util = require('gulp-util');
 var sourcemaps = require('gulp-sourcemaps');
 var ts = require('gulp-typescript');
 var tsProject = ts.createProject('tsconfig.json');
-console.log(tsProject);
-// generate .d.ts files
-// tsProject.options.declaration = true;
 
 var buildProps = null;
 
@@ -174,10 +171,9 @@ gulp.task('getBuildProperties', function(callback) {
 });
 
 gulp.task('typescript', function() {
-	var destDir = src;
-
 	var tsResult = gulp.src([
 		src + '/**/*.ts',
+		'!' + src + '/**/*.d.ts',
 		'!' + src + '/{node_modules,bower_components,dist,typings}/**/*'])
 		.pipe(plumber({errorHandler: handleError}))
 		.pipe(sourcemaps.init())
@@ -185,7 +181,7 @@ gulp.task('typescript', function() {
 
 	return merge([
 		tsResult.dts.pipe(gulpIgnore.exclude(src + '/test/**/*')).pipe(gulp.dest(dist())),
-		tsResult.js.pipe(sourcemaps.write('.')).pipe(gulp.dest(destDir))
+		tsResult.js.pipe(sourcemaps.write('.')).pipe(gulp.dest(src))
 	]);
 });
 
@@ -265,7 +261,11 @@ gulp.task("installTypings", function() {
 
 // Clean output directory
 gulp.task('clean', function() {
-	return del(['.tmp', dist(), src + '/{test,demo}/**/*.{js,map,d.ts}', src + '/*.{js,map,d.ts}', '!' + src + '/{gulpfile,wct.conf}.js']);
+	var filesToDelete = ['.tmp', src + '/{test,demo}/**/*.{js,map,d.ts}', src + '/*.{js,map,d.ts}', '!' + src + '/{gulpfile,wct.conf}.js'];
+	if (dist() != '.') {
+		filesToDelete.push(dist());
+	}
+	return del(filesToDelete);
 });
 
 // Watch files for changes & reload
