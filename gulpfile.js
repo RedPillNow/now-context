@@ -308,7 +308,7 @@ gulp.task('default', ['clean'], function(cb) {
 	runSequence(
 		['typescript'],
 		['ensureFiles', 'copy', 'styles'],
-		['replacePaths', 'images', 'fonts'],
+		['images', 'fonts'],
 		cb);
 });
 

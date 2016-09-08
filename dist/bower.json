@@ -12,10 +12,16 @@
 		"webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.22",
 		"polymer-ts": "^0.1.28"
 	},
+	"ignore": [
+		"/*",
+		"!index.html",
+		"!demo",
+		"!/now-*",
+		"!styles/**/*",
+		"!images/**/*",
+		"!README.md"
+	],
 	"typescript": {
 		"definition": "now-starter-element.d.ts"
-	}
-}
-ition": "now-starter-element.d.ts"
 	}
 }
