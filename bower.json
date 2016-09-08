@@ -14,7 +14,12 @@
 	},
 	"ignore": [
 		"/*",
-		"!dist/**/*"
+		"!index.html",
+		"!demo",
+		"!/now-*",
+		"!styles/**/*",
+		"!images/**/*",
+		"!README.md"
 	],
 	"typescript": {
 		"definition": "now-starter-element.d.ts"
