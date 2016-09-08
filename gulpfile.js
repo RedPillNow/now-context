@@ -69,7 +69,7 @@ var AUTOPREFIXER_BROWSERS = [
 
 var DIST = 'dist';
 
-var src = 'src';
+var src = '.';
 
 var dist = function(subpath) {
 	return !subpath ? DIST : path.join(DIST, subpath);
@@ -262,7 +262,7 @@ gulp.task("installTypings", function() {
 
 // Clean output directory
 gulp.task('clean', function() {
-	return del(['.tmp', dist(), src + '/{test,demo}/**/*.{js,map,d.ts}', src + '/*.{js,map,d.ts}']);
+	return del(['.tmp', dist(), src + '/{test,demo}/**/*.{js,map,d.ts}', src + '/*.{js,map,d.ts}', '!' + src + '/{gulpfile,wct.conf}.js']);
 });
 
 // Watch files for changes & reload
@@ -307,8 +307,8 @@ gulp.task('serve', ['styles', 'typescript', 'getBuildProperties'], function() {
 gulp.task('default', ['clean'], function(cb) {
 	runSequence(
 		['typescript'],
-		['ensureFiles', 'copy', 'styles'],
-		['images', 'fonts'],
+		// ['ensureFiles', 'copy', 'styles'],
+		// ['images', 'fonts'],
 		cb);
 });
 
