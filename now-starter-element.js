@@ -11,20 +11,21 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 var NowElements;
 (function (NowElements) {
-    var BasicAppLayout = (function (_super) {
-        __extends(BasicAppLayout, _super);
-        function BasicAppLayout() {
+    var NowStarterElement = (function (_super) {
+        __extends(NowStarterElement, _super);
+        function NowStarterElement() {
             _super.apply(this, arguments);
         }
         __decorate([
             property({ type: String })
-        ], BasicAppLayout.prototype, "prop1", void 0);
-        BasicAppLayout = __decorate([
+        ], NowStarterElement.prototype, "prop1", void 0);
+        NowStarterElement = __decorate([
             component('now-starter-element')
-        ], BasicAppLayout);
-        return BasicAppLayout;
-    }(polymer.Base));
-    NowElements.BasicAppLayout = BasicAppLayout;
+        ], NowStarterElement);
+        return NowStarterElement;
+    }(NowElements.BaseElement));
+    NowElements.NowStarterElement = NowStarterElement;
 })(NowElements || (NowElements = {}));
-NowElements.BasicAppLayout.register();
+NowElements.NowStarterElement.register();
+
 //# sourceMappingURL=now-starter-element.js.map

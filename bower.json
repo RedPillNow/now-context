@@ -3,7 +3,8 @@
 	"description": "Simple layout element with common CSS to be used for simpler Red Pill Now applications.",
 	"main": "now-starter-element.html",
 	"dependencies": {
-		"polymer": "Polymer/polymer#^1.4.0"
+		"polymer": "Polymer/polymer#^1.4.0",
+		"now-core": "https://keithstric:Str1ckland2@bitbucket.org/redpilldev/now-core.git"
 	},
 	"devDependencies": {
 		"iron-component-page": "PolymerElements/iron-component-page#^1.0.0",

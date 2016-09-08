@@ -10,7 +10,7 @@
  * Tests for now-starter-element.
  */
 describe('now-starter-element-src.test tests', function () {
-	let element: NowElements.BasicAppLayout;
+	let element: NowElements.NowStarterElement;
 
 	before(function () {
 		element = fixture('basic');
