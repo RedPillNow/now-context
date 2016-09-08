@@ -11,7 +11,10 @@
 		"noEmitOnError": true,
 		"declaration": true
 	},
-	"files": [
-		"now-starter-element.ts"
+	"exclude": [
+		"node_modules",
+		"bower_components",
+		"typings",
+		"dist"
 	]
 }

@@ -50,8 +50,9 @@ var util = require('gulp-util');
 var sourcemaps = require('gulp-sourcemaps');
 var ts = require('gulp-typescript');
 var tsProject = ts.createProject('tsconfig.json');
+console.log(tsProject);
 // generate .d.ts files
-tsProject.options.declaration = true;
+// tsProject.options.declaration = true;
 
 var buildProps = null;
 
@@ -67,7 +68,7 @@ var AUTOPREFIXER_BROWSERS = [
 	'bb >= 10'
 ];
 
-var DIST = 'dist';
+var DIST = '.';
 
 var src = '.';
 
@@ -175,7 +176,9 @@ gulp.task('getBuildProperties', function(callback) {
 gulp.task('typescript', function() {
 	var destDir = src;
 
-	var tsResult = gulp.src([src + '/**/*.ts', '!' + src + '/bower_components/**/*', '!' + src + '/node_modules/**/*'])
+	var tsResult = gulp.src([
+		src + '/**/*.ts',
+		'!' + src + '/{node_modules,bower_components,dist,typings}/**/*'])
 		.pipe(plumber({errorHandler: handleError}))
 		.pipe(sourcemaps.init())
 		.pipe(ts(tsProject));
