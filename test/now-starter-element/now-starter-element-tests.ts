@@ -10,7 +10,7 @@ describe('now-starter-element tests', function () {
 	let element: NowElements.NowStarterElement;
 
 	before(function () {
-		element = fixture('basic');
+		element = fixture('now-starter-element');
 	});
 
 	after(function () {
@@ -23,7 +23,6 @@ describe('now-starter-element tests', function () {
 	});
 
 	it('should be instantiated', function() {
-		var element = fixture('basic');
 		chai.expect(element.is).equals('now-starter-element');
 	});
 });

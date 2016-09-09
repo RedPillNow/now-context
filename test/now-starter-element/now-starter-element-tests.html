@@ -2,17 +2,22 @@
 
 <html>
 <head>
-	<title>now-starter-element src.test</title>
+	<title>now-starter-element tests</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
 	<script src="../../../webcomponentsjs/webcomponents-lite.js"></script>
 	<script src="../../../web-component-tester/browser.js"></script>
 
+	<!-- Import test core code -->
+	<link rel="import" href="../../../now-core/now-test-core.html">
+
+	<!-- Import the element to test -->
 	<link rel="import" href="../../now-starter-element.html">
+
 </head>
 <body>
 <span id="browser-sync-binding"></span>
-<test-fixture id="basic">
+<test-fixture id="now-starter-element">
 	<template>
 		<now-starter-element></now-starter-element>
 	</template>
