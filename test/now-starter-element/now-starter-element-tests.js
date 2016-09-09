@@ -14,5 +14,4 @@ describe('now-starter-element tests', function () {
         chai.expect(element.is).equals('now-starter-element');
     });
 });
-
 //# sourceMappingURL=now-starter-element-tests.js.map

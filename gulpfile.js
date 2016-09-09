@@ -117,14 +117,15 @@ gulp.task('getBuildProperties', function(callback) {
 gulp.task('typescript', function() {
 	var tsResult = gulp.src([
 		src + '/**/*.ts',
-		'!' + src + '/**/*.d.ts',
-		'!' + src + '/{node_modules,bower_components,dist,typings}/**/*'
+		'!' + src + '/demo/**/*.d.ts',
+		'!' + src + '/test/**/*.d.ts',
+		'!' + src + '/*.d.ts',
+		'typings/index.d.ts',
+		'!' + src + '/{node_modules,bower_components,dist}/**/*'
 	])
 		.pipe(sourcemaps.init())
 		// .pipe(plumber({errorHandler: handleError}))
-		.pipe(ts(tsProject));
-
-
+		.pipe(ts(tsProject, undefined, ts.reporter.longReporter()));
 	return merge([
 		tsResult.dts.pipe(gulpIgnore.exclude(src + '/test/**/*')).pipe(gulp.dest(dist())),
 		tsResult.js.pipe(sourcemaps.write('.')).pipe(gulp.dest(src))

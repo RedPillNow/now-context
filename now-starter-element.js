@@ -27,5 +27,4 @@ var NowElements;
     NowElements.NowStarterElement = NowStarterElement;
 })(NowElements || (NowElements = {}));
 NowElements.NowStarterElement.register();
-
 //# sourceMappingURL=now-starter-element.js.map
