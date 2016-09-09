@@ -1,4 +1,4 @@
-describe('now-starter-element-src.test tests', function () {
+describe('now-starter-element tests', function () {
     var element;
     before(function () {
         element = fixture('basic');

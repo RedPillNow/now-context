@@ -9,7 +9,7 @@
 /**
  * Tests for now-starter-element.
  */
-describe('now-starter-element-src.test tests', function () {
+describe('now-starter-element tests', function () {
 	let element: NowElements.NowStarterElement;
 
 	before(function () {
