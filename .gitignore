@@ -3,6 +3,8 @@ bower_components/
 *.log
 .idea/
 typings/
+test/**.js
+test/**.js.map
 *.iml
 .DS_Store
 _SpecRunner.html
