@@ -56,6 +56,8 @@ You can see the other tasks (such as `clean`) in the `gulpfilejs`
 To customize the project, just replace 'now-starter-element' with the name of your element (this includes file names as well as text inside of html and ts files) 
 You will want to rename the TypeScript class as well
 
+NOTE: Make sure you update bower.json so that the name of the component is correct! Otherwise when someone installs it, it'll be installed as now-starter-element.
+
 ## Testing
 
 Be sure to update the test suite in the `test` folder with tests for your component!
