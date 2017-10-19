@@ -1,12 +1,16 @@
 {
-  "name": "now-starter-element",
-  "version": "0.0.0",
-  "description": "Simple layout element with common CSS to be used for simpler Red Pill Now applications.",
+  "name": "now-context",
+  "version": "0.1.0",
+  "description": "Manage the context of an application. All XHR requests should pass through this element",
   "engines": {
     "node": ">=4.0"
   },
   "private": true,
   "devDependencies": {
+    "@types/chai": "^4.0.4",
+    "@types/mocha": "^2.2.43",
+    "@types/polymer-ts": "^0.1.30",
+    "@types/sinon": "^2.3.5",
     "browser-sync": "^2.7.7",
     "connect-history-api-fallback": "^1.1.0",
     "del": "^2.0.2",
@@ -31,7 +35,7 @@
     "gulp-replace": "^0.5.4",
     "gulp-size": "^2.0.0",
     "gulp-sourcemaps": "^1.6.0",
-    "gulp-typescript": "^2.13.6",
+    "gulp-typescript": "^3.2.2",
     "gulp-uglify": "^1.2.0",
     "gulp-useref": "^2.1.0",
     "gulp-util": "^3.0.7",
@@ -41,10 +45,12 @@
     "proxy-middleware": "^0.15.0",
     "require-dir": "^0.3.0",
     "run-sequence": "^1.0.2",
+    "typescript": "^2.5.2",
     "web-component-tester": "^4.0.0"
   },
   "scripts": {
     "test": "gulp test:local",
     "start": "gulp serve"
-  }
+  },
+  "dependencies": {}
 }

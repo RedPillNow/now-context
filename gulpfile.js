@@ -46,11 +46,6 @@ var uglify = require('gulp-uglify');
 var util = require('gulp-util');
 //var polylint = require('gulp-polylint');
 
-// TypeScript support
-var sourcemaps = require('gulp-sourcemaps');
-var ts = require('gulp-typescript');
-var tsProject = ts.createProject('tsconfig.json');
-
 var buildProps = null;
 
 var AUTOPREFIXER_BROWSERS = [
@@ -114,18 +109,14 @@ gulp.task('getBuildProperties', function(callback) {
 	});
 });
 
+// TypeScript support
+var sourcemaps = require('gulp-sourcemaps');
+var ts = require('gulp-typescript');
+var tsProject = ts.createProject('tsconfig.json');
 gulp.task('typescript', function() {
-	var tsResult = gulp.src([
-		src + '/**/*.ts',
-		'!' + src + '/demo/**/*.d.ts',
-		'!' + src + '/test/**/*.d.ts',
-		'!' + src + '/*.d.ts',
-		'typings/index.d.ts',
-		'!' + src + '/{node_modules,bower_components,dist}/**/*'
-	])
+	const tsResult = tsProject.src()
 		.pipe(sourcemaps.init())
-		// .pipe(plumber({errorHandler: handleError}))
-		.pipe(ts(tsProject, undefined, ts.reporter.longReporter()));
+		.pipe(tsProject(ts.reporter.longReporter()));
 	return merge([
 		tsResult.dts.pipe(gulpIgnore.exclude(src + '/test/**/*')).pipe(gulp.dest(dist())),
 		tsResult.js.pipe(sourcemaps.write('.')).pipe(gulp.dest(src))

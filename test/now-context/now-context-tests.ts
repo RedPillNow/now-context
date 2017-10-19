@@ -4,13 +4,13 @@
  declare var stub;
 
 /**
- * Tests for now-starter-element.
+ * Tests for now-context.
  */
-describe('now-starter-element tests', function () {
-	let element: NowElements.NowStarterElement;
+describe('now-context tests', function () {
+	let element: NowElements.NowContext;
 
 	before(function () {
-		element = fixture('now-starter-element');
+		element = fixture('now-context');
 	});
 
 	after(function () {
@@ -23,6 +23,6 @@ describe('now-starter-element tests', function () {
 	});
 
 	it('should be instantiated', function() {
-		chai.expect(element.is).equals('now-starter-element');
+		chai.expect(element.is).equals('now-context');
 	});
 });

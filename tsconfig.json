@@ -2,6 +2,7 @@
 	"compileOnSave": true,
 	"compilerOptions": {
 		"target": "es5",
+		"module": "commonjs",
 		"noImplicitAny": false,
 		"removeComments": true,
 		"preserveConstEnums": true,
@@ -12,8 +13,12 @@
 		"declaration": true
 	},
 	"exclude": [
-		"node_modules",
-		"bower_components",
-		"dist"
+		"node_modules"
+	],
+	"include": [
+		"*.ts",
+		"test/*.ts",
+		"test/**/*.ts",
+		"bower_components/now-core/*.d.ts"
 	]
 }

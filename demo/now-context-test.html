@@ -1,0 +1,77 @@
+<dom-module id="now-context-test">
+	<template>
+		<style is="custom-style" include="">
+			:host {
+				display: block;
+				box-sizing: border-box;
+			}
+		</style>
+		<button id="getNextButton">Get Next</button>
+		<button id="getSameButton">Get Same Record Again</button>
+		<button id="getPosts">Get Posts</button>
+		<div id="contextDisplay">
+			{{contextDisplay}}
+		</div>
+	</template>
+	<script>
+Polymer({
+	is: 'now-context-test',
+	properties: {
+		context: {
+			type: Object,
+			observer: 'onContextChange',
+			notify: true
+		},
+		count: {
+			type: Number,
+			value: 0
+		},
+		contextDisplay: {
+			type: String,
+			notify: true
+		}
+	},
+	attached() {
+		this.getNext();
+	},
+	listeners: {
+		'getNextButton.click': 'getNext',
+		'getSameButton.click': 'getSame',
+		'getPosts.click': 'getPosts'
+	},
+	observers: [
+		'onContextChange(context.*)'
+	],
+	onContextChange(newContext) {
+		console.log(this.is, 'onContextChange', arguments);
+	},
+	getNext(evt, detail) {
+		this.count++;
+		this._fireEvent(this.count);
+	},
+	getSame(evt, detail) {
+		this._fireEvent(this.count);
+	},
+	getPosts(evt, detail) {
+		let url = 'https://jsonplaceholder.typicode.com/posts';
+		let detailObj = {
+			ajax: {
+				url: url,
+				idKey: 'id'
+			}
+		};
+		this.fire('iron-signal', {name: 'nowcontextget', data: detailObj});
+	},
+	_fireEvent(count) {
+		let url = 'https://jsonplaceholder.typicode.com/posts/' + count;
+		let detailObj = {
+			ajax: {
+				url: url,
+				idKey: 'id'
+			}
+		};
+		this.fire('iron-signal', {name: 'nowcontextget', data: detailObj});
+	}
+});
+	</script>
+</dom-module>

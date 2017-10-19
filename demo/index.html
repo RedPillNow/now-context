@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-	<title>now-starter-element demo</title>
+	<title>now-context demo</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
 	<script src="../webcomponentsjs/webcomponents-lite.js"></script>
@@ -9,7 +9,8 @@
 	<link rel="import" href="../iron-demo-helpers/demo-pages-shared-styles.html">
 	<link rel="import" href="../iron-demo-helpers/demo-snippet.html">
 
-	<link rel="import" href="../now-starter-element.html">
+	<link rel="import" href="../now-context.html">
+	<link rel="import" href="now-context-test.html">
 
 	<style is="custom-style" include="demo-pages-shared-styles">
 		#mainDiv {
@@ -21,11 +22,11 @@
 <body>
 <span id="browser-sync-binding"></span>
 <div id="mainDiv" class="vertical-section-container centered">
-	<h3>Basic now-starter-element Demo</h3>
-
+	<h3>Basic now-context Demo</h3>
 	<demo-snippet>
-		<template>
-			<now-starter-element prop1="World"></now-starter-element>
+		<template is="dom-bind">
+			<now-context context="{{context}}"></now-context>
+			<now-context-test context="{{context}}"></now-context-test>
 		</template>
 	</demo-snippet>
 </div>
