@@ -8,12 +8,6 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
 var Now;
 (function (Now) {
     var AjaxRequest = (function () {
@@ -176,8 +170,32 @@ var NowElements;
         function NowContext() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
+        Object.defineProperty(NowContext, "is", {
+            get: function () { return 'now-context'; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(NowContext, "properties", {
+            get: function () {
+                return {
+                    context: {
+                        type: Object,
+                        value: {},
+                        notify: true
+                    }
+                };
+            },
+            enumerable: true,
+            configurable: true
+        });
         NowContext.prototype.attached = function () {
             window['NowContext'] = this;
+            document.addEventListener('nowcontextget', this.onGetRequest);
+            document.addEventListener('nowcontextput', this.onPutRequest);
+            document.addEventListener('nowcontextpost', this.onPostRequest);
+            document.addEventListener('nowcontextdelete', this.onDeleteRequest);
+            document.addEventListener('nowcontextpatch', this.onPatchRequest);
+            document.addEventListener('nowcontextreqres', this._onRequestResponse);
         };
         NowContext.prototype.onGetRequest = function (evt) {
             var _this = this;
@@ -193,11 +211,11 @@ var NowElements;
                     return _this.updateContext(ironRequest, ajax_1, detail);
                 })
                     .catch(function (err) {
-                    throw new Error(_this.is + '.onGetRequest failed');
+                    throw new Error(NowContext.is + '.onGetRequest failed');
                 });
             }
             else {
-                throw new Error(this.is + ':iron-signal-nowcontextget: No detail provided in signal');
+                throw new Error(NowContext.is + ':iron-signal-nowcontextget: No detail provided in signal');
             }
         };
         NowContext.prototype.onPutRequest = function (evt) {
@@ -212,7 +230,7 @@ var NowElements;
                 return ajax.generateRequest().completes;
             }
             else {
-                throw new Error(this.is + ',nowcontextput: No detail provided in signal');
+                throw new Error(NowContext.is + ',nowcontextput: No detail provided in signal');
             }
         };
         NowContext.prototype.onPostRequest = function (evt) {
@@ -227,7 +245,7 @@ var NowElements;
                 return ajax.generateRequest().completes;
             }
             else {
-                throw new Error(this.is + ',nowcontextpost: No detail provided in signal');
+                throw new Error(NowContext.is + ',nowcontextpost: No detail provided in signal');
             }
         };
         NowContext.prototype.onDeleteRequest = function (evt) {
@@ -241,7 +259,7 @@ var NowElements;
                 return ajax.generateRequest().completes;
             }
             else {
-                throw new Error(this.is + ',nowcontextdelete: No detail provided in signal');
+                throw new Error(NowContext.is + ',nowcontextdelete: No detail provided in signal');
             }
         };
         NowContext.prototype.onPatchRequest = function (evt) {
@@ -256,7 +274,7 @@ var NowElements;
                 return ajax.generateRequest().completes;
             }
             else {
-                throw new Error(this.is + ',nowcontextpatch: No detail provided in signal');
+                throw new Error(NowContext.is + ',nowcontextpatch: No detail provided in signal');
             }
         };
         NowContext.prototype.getAjaxRequest = function (ironRequest, ajax) {
@@ -327,7 +345,7 @@ var NowElements;
             return contextItemKey;
         };
         NowContext.prototype.findContextItem = function (contextItemKey) {
-            var context = this.context;
+            var context = this.get('context');
             if (context.hasOwnProperty(contextItemKey)) {
                 return context[contextItemKey];
             }
@@ -352,20 +370,10 @@ var NowElements;
             }
             return event;
         };
-        __decorate([
-            property({
-                type: Object,
-                value: {},
-                notify: true
-            })
-        ], NowContext.prototype, "context", void 0);
-        NowContext = __decorate([
-            component('now-context')
-        ], NowContext);
         return NowContext;
     }(NowElements.BaseElement));
     NowElements.NowContext = NowContext;
 })(NowElements || (NowElements = {}));
-NowElements.NowContext.register();
+customElements.define(NowElements.NowContext.is, NowElements.NowContext);
 
 //# sourceMappingURL=now-context.js.map

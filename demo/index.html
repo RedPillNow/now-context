@@ -4,13 +4,14 @@
 	<title>now-context demo</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
-	<script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+	<script src="../../webcomponentsjs/webcomponents-loader.js"></script>
 
 	<link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
 	<link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
 
+	<link rel="import" href="../../polymer/polymer-element.html">
 	<link rel="import" href="../now-context.html">
-	<link rel="import" href="now-context-test.html">
+	<!-- <link rel="import" href="now-context-test.html"> -->
 
 	<style is="custom-style" include="demo-pages-shared-styles">
 		#mainDiv {
@@ -24,10 +25,12 @@
 <div id="mainDiv" class="vertical-section-container centered">
 	<h3>Basic now-context Demo</h3>
 	<demo-snippet>
-		<template is="dom-bind">
-			<now-context context="{{nowContext}}"></now-context>
-			<now-context-test context="{{nowContext}}"></now-context-test>
-		</template>
+		<dom-bind>
+			<template>
+				<now-context context="{{nowContext}}"></now-context>
+				<!-- <now-context-test context="{{nowContext}}"></now-context-test> -->
+			</template>
+		</dom-bind>
 	</demo-snippet>
 </div>
 </body>

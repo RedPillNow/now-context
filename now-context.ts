@@ -139,23 +139,28 @@ namespace NowElements {
 	 *
 	 * @author Keith Strickland <keith@redpillnow.com>
 	 */
-	@component('now-context')
-	export class NowContext extends NowElements.BaseElement {
-		/**
-		 * The context Item. This is an object containing all the requests
-		 * made
-		 * @type {any}
-		 */
-		@property({
-			type: Object,
-			value: {},
-			notify: true
-		})
-		context: any;
+	export class NowContext extends Polymer.Element {
+		static get is() { return 'now-context' }
+
+		static get properties() {
+			return {
+				context: {
+					type: Object,
+					value: {},
+					notify: true
+				}
+			}
+		}
 
 		attached() {
 			// Create a global for interacting with this element
 			window['NowContext'] = this;
+			document.addEventListener('nowcontextget', this.onGetRequest);
+			document.addEventListener('nowcontextput', this.onPutRequest);
+			document.addEventListener('nowcontextpost', this.onPostRequest);
+			document.addEventListener('nowcontextdelete', this.onDeleteRequest);
+			document.addEventListener('nowcontextpatch', this.onPatchRequest);
+			document.addEventListener('nowcontextreqres', this._onRequestResponse);
 		}
 		/**
 		 * Perform a GET request and return the promise
@@ -175,9 +180,9 @@ namespace NowElements {
 		 */
 		onGetRequest(evt: CustomEvent) {
 			let detail = evt.detail;
-			// console.log(this.is, 'onGetRequest, detail=', detail);
+			// console.log(NowContext.is, 'onGetRequest, detail=', detail);
 			if (detail) {
-				let ajax = this.$.getAjax;
+				let ajax: any = this.$.getAjax;
 				ajax.params = detail.ajax.parameters;
 				ajax.handleAs = detail.ajax.handleAs || 'json';
 				ajax.url = detail.ajax.url
@@ -187,10 +192,10 @@ namespace NowElements {
                         return this.updateContext(ironRequest, ajax, detail);
 					})
 					.catch((err) => {
-						throw new Error(this.is + '.onGetRequest failed');
+						throw new Error(NowContext.is + '.onGetRequest failed');
 					});
 			}else {
-				throw new Error(this.is + ':iron-signal-nowcontextget: No detail provided in signal');
+				throw new Error(NowContext.is + ':iron-signal-nowcontextget: No detail provided in signal');
 			}
 		}
 		/**
@@ -212,7 +217,7 @@ namespace NowElements {
 		onPutRequest(evt: CustomEvent) {
 			let detail = evt.detail;
 			if (detail) {
-				let ajax = this.$.putAjax;
+				let ajax: any = this.$.putAjax;
 				ajax.params = detail.ajax.parameters;
 				ajax.handleAs = detail.ajax.handleAs || 'json';
 				ajax.url = detail.ajax.url
@@ -220,7 +225,7 @@ namespace NowElements {
 				ajax.body = detail.ajax.payload;
 				return ajax.generateRequest().completes;
 			}else {
-				throw new Error(this.is + ',nowcontextput: No detail provided in signal');
+				throw new Error(NowContext.is + ',nowcontextput: No detail provided in signal');
 			}
 		}
 		/**
@@ -242,7 +247,7 @@ namespace NowElements {
 		onPostRequest(evt: CustomEvent) {
 			let detail = evt.detail;
 			if (detail) {
-				let ajax = this.$.postAjax;
+				let ajax: any = this.$.postAjax;
 				ajax.params = detail.ajax.parameters;
 				ajax.handleAs = detail.ajax.handleAs || 'json';
 				ajax.url = detail.ajax.url
@@ -250,7 +255,7 @@ namespace NowElements {
 				ajax.body = detail.ajax.payload;
 				return ajax.generateRequest().completes;
 			}else {
-				throw new Error(this.is + ',nowcontextpost: No detail provided in signal');
+				throw new Error(NowContext.is + ',nowcontextpost: No detail provided in signal');
 			}
 		}
 		/**
@@ -272,14 +277,14 @@ namespace NowElements {
 		onDeleteRequest(evt: CustomEvent) {
 			let detail = evt.detail;
 			if (detail) {
-				let ajax = this.$.deleteAjax;
+				let ajax: any = this.$.deleteAjax;
 				ajax.params = detail.ajax.parameters;
 				ajax.handleAs = detail.ajax.handleAs || 'json';
 				ajax.url = detail.ajax.url
 				ajax.contentType = detail.ajax.contentType || 'application/json';
 				return ajax.generateRequest().completes;
 			}else {
-				throw new Error(this.is + ',nowcontextdelete: No detail provided in signal');
+				throw new Error(NowContext.is + ',nowcontextdelete: No detail provided in signal');
 			}
 		}
 		/**
@@ -301,7 +306,7 @@ namespace NowElements {
 		onPatchRequest(evt: CustomEvent) {
 			let detail = evt.detail;
 			if (detail) {
-				let ajax = this.$.patchAjax;
+				let ajax: any = this.$.patchAjax;
 				ajax.params = detail.ajax.parameters;
 				ajax.handleAs = detail.ajax.handleAs || 'json';
 				ajax.url = detail.ajax.url
@@ -309,7 +314,7 @@ namespace NowElements {
 				ajax.body = detail.ajax.payload;
 				return ajax.generateRequest().completes;
 			}else {
-				throw new Error(this.is + ',nowcontextpatch: No detail provided in signal');
+				throw new Error(NowContext.is + ',nowcontextpatch: No detail provided in signal');
 			}
 		}
 		/**
@@ -386,8 +391,8 @@ namespace NowElements {
 						let path = 'context.' + contextItemKey;
 						this.set(path, contextItem);
 					} else {
-						this.context[contextItemKey] = contextItem;
-						this.notifyPath('context.*', this.context[contextItemKey]);
+						(<any> this).context[contextItemKey] = contextItem;
+						this.notifyPath('context.*', (<any> this).context[contextItemKey]);
 					}
 					return true;
 				}
@@ -419,7 +424,7 @@ namespace NowElements {
 		 * @returns {Now.ContextItem}
 		 */
 		findContextItem(contextItemKey): Now.ContextItem {
-			let context = this.context;
+			let context = this.get('context');
 			if (context.hasOwnProperty(contextItemKey)) {
 				return context[contextItemKey];
 			}
@@ -452,4 +457,4 @@ namespace NowElements {
 	}
 }
 
-NowElements.NowContext.register();
+customElements.define(NowElements.NowContext.is, NowElements.NowContext);

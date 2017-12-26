@@ -1,24 +1,33 @@
 {
 	"compileOnSave": true,
 	"compilerOptions": {
-		"target": "es5",
+		"target": "es2016",
 		"module": "commonjs",
+		"lib": [
+			"dom",
+			"es6",
+			"dom.iterable",
+			"scripthost"
+		],
 		"noImplicitAny": false,
 		"removeComments": true,
 		"preserveConstEnums": true,
 		"sourceMap": true,
 		"experimentalDecorators": true,
 		"listFiles": true,
-		"noEmitOnError": true,
-		"declaration": true
+		"noEmitOnError": true
 	},
 	"exclude": [
-		"node_modules"
+		"node_modules/**/*.*",
+		"/usr/local/lib/node_modules/**/*"
 	],
 	"include": [
-		"*.ts",
+		"**/*.ts",
 		"test/*.ts",
 		"test/**/*.ts",
-		"bower_components/now-core/*.d.ts"
+		"../now-*/*.d.ts",
+		"../polymer/**/*.d.ts",
+		"bower_components/now-core/*.d.ts",
+		"bower_components/polymer/**/*.d.ts"
 	]
 }

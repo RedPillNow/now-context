@@ -4,19 +4,17 @@
   "description": "Manage the context of an application. All XHR requests should pass through this element",
   "main": "now-context.html",
   "dependencies": {
-    "polymer": "Polymer/polymer#^1.4.0",
-    "now-core": "https://keithstric:Str1ckland2@bitbucket.org/redpilldev/now-core.git",
-    "iron-ajax": "PolymerElements/iron-ajax#^1.0.0",
-    "iron-signals": "PolymerElements/iron-signals#^1.0.0"
+    "polymer": "Polymer/polymer#master",
+    "now-core": "https://keithstric:Str1ckland2@bitbucket.org/redpilldev/now-core.git#2.0.0",
+    "iron-ajax": "PolymerElements/iron-ajax#^2.0.0#"
   },
   "devDependencies": {
-    "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
-    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^1.0.0",
-    "web-component-tester": "^5.0.0",
-    "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.22",
-    "polymer-ts": "^0.1.28",
-    "paper-item": "PolymerElements/paper-item#^1.0.0",
-    "iron-flex-layout": "PolymerElements/iron-flex-layout#^1.0.0"
+    "iron-component-page": "PolymerElements/iron-component-page#^2.0.0",
+    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",
+    "web-component-tester": "^6.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0",
+    "paper-item": "PolymerElements/paper-item#^2.0.0",
+    "iron-flex-layout": "PolymerElements/iron-flex-layout#^2.0.0"
   },
   "ignore": [
     "/*",
@@ -31,6 +29,6 @@
     "definition": "now-context.d.ts"
   },
   "resolutions": {
-    "webcomponentsjs": "^0.7.24"
+    "polymer": "master"
   }
 }

@@ -34,7 +34,14 @@ declare namespace Now {
 }
 declare namespace NowElements {
     class NowContext extends NowElements.BaseElement {
-        context: any;
+        static readonly is: string;
+        static readonly properties: {
+            context: {
+                type: ObjectConstructor;
+                value: {};
+                notify: boolean;
+            };
+        };
         attached(): void;
         onGetRequest(evt: CustomEvent): any;
         onPutRequest(evt: CustomEvent): any;

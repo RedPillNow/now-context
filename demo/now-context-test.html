@@ -52,7 +52,93 @@
 		</div>
 	</template>
 	<script>
-Polymer({
+class NowContextTest extends Polymer.Element {
+	static get is() { return 'now-context-test' }
+
+	static get properties() {
+		return {
+			context: {
+				type: Object,
+				notify: true
+			},
+			count: {
+				type: Number,
+				value: 0
+			},
+			contextDisplay: {
+				type: String,
+				notify: true,
+				value: []
+			}
+		};
+	}
+
+	static get observers() {
+		return [
+			'onContextChange(context.*)'
+		]
+	}
+
+	constructor() {
+		super();
+	}
+
+	attached() {
+
+	}
+
+	onContextChange(newContext) {
+		console.log(this.is, 'onContextChange', arguments);
+		let path = newContext.path;
+		let changedItem = this.get(path);
+		if (!changedItem && path && path.indexOf('*') > -1) {
+			changedItem = newContext.value;
+		}
+		if (changedItem && Object.keys(changedItem).length > 0) {
+			let isArray = Array.isArray(changedItem.model);
+			let contextDispItem = {
+				id: isArray ? changedItem.lastAjaxRequest.requestUrl : changedItem[changedItem.idKey],
+				idKey: changedItem.idKey,
+				url: changedItem.lastAjaxRequest.requestUrl,
+				title: isArray ? 'Array (' + changedItem.model.length + ')' : changedItem.model['title']
+			};
+			this.push('contextDisplay', contextDispItem);
+		}
+	}
+
+	getNext(evt, detail) {
+		this.count++;
+		this._fireEvent(this.count);
+	}
+
+	getSame(evt, detail) {
+		this._fireEvent(this.count);
+	}
+
+	getPosts(evt, detail) {
+		let url = 'https://jsonplaceholder.typicode.com/posts';
+		let detailObj = {
+			ajax: {
+				url: url,
+				idKey: 'id'
+			}
+		};
+		this.fire('iron-signal', {name: 'nowcontextget', data: detailObj});
+	}
+
+	_fireEvent(count) {
+		let url = 'https://jsonplaceholder.typicode.com/posts/' + count;
+		let detailObj = {
+			ajax: {
+				url: url,
+				idKey: 'id'
+			}
+		};
+		this.fire('iron-signal', {name: 'nowcontextget', data: detailObj});
+	}
+}
+customElements.define(NowContextTest.is, NowContextTest);
+/* Polymer({
 	is: 'now-context-test',
 	properties: {
 		context: {
@@ -125,7 +211,7 @@ Polymer({
 		};
 		this.fire('iron-signal', {name: 'nowcontextget', data: detailObj});
 	}
-});
+});*/
 
 	</script>
 </dom-module>

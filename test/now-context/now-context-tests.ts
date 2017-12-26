@@ -23,6 +23,6 @@ describe('now-context tests', function () {
 	});
 
 	it('should be instantiated', function() {
-		chai.expect(element.is).equals('now-context');
+		chai.expect(NowElements.NowContext.is).equals('now-context');
 	});
 });

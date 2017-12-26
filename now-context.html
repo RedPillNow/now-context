@@ -1,9 +1,8 @@
 <link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="../polymer-ts/polymer-ts.html">
+<link rel="import" href="../polymer/polymer-element.html">
 <link rel="import" href="../now-core/now-core.html">
 
 <link rel="import" href="../iron-ajax/iron-ajax.html">
-<link rel="import" href="../iron-signals/iron-signals.html">
 
 <!--
 `now-context`
@@ -20,12 +19,6 @@ Manage the context of an application. All XHR requests should pass through this 
 				display: none;
 			}
 		</style>
-		<iron-signals on-iron-signal-nowcontextget="onGetRequest"></iron-signals>
-		<iron-signals on-iron-signal-nowcontextput="onPutRequest"></iron-signals>
-		<iron-signals on-iron-signal-nowcontextpost="onPostRequest"></iron-signals>
-		<iron-signals on-iron-signal-nowcontextdelete="onDeleteRequest"></iron-signals>
-		<iron-signals on-iron-signal-nowcontextpatch="onPatchRequest"></iron-signals>
-		<iron-signals on-iron-signal-nowcontextreqres="onRequestResponse"></iron-signals>
 		<iron-ajax
 			id="getAjax"
 			method="GET"
