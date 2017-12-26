@@ -45,8 +45,8 @@ declare namespace NowElements {
         getContextItem(ironRequest: any, ajaxRequest: Now.AjaxRequest, idKey: string): Now.ContextItem;
         private updateContext(ironRequest, ajax, detail);
         private getContextKey(ajaxReq, contextItem);
-        private _findContextItem(contextItemKey);
-        onRequestResponse(evt: CustomEvent): void;
+        findContextItem(contextItemKey: any): Now.ContextItem;
+        private _onRequestResponse(evt);
         private _dispatchEvent(options);
     }
 }

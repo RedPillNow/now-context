@@ -1,16 +1,54 @@
+<link rel="import" href="../../paper-item/paper-item.html">
+<link rel="import" href="../../iron-flex-layout/iron-flex-layout-classes">
 <dom-module id="now-context-test">
 	<template>
-		<style is="custom-style" include="">
+		<style is="custom-style" include="iron-flex iron-flex-alignment">
 			:host {
 				display: block;
 				box-sizing: border-box;
+			}
+			paper-item:first-child {
+				margin-top: 10px;
+			}
+			paper-item {
+				margin-bottom: 10px;
+				--paper-item: {
+					border: 1px solid #afafaf;
+				};
+			}
+			.label {
+				font-size: 12px;
+			}
+			.value {
+				font-size: 13px;
+				font-weight: 500;
+			}
+			.title .value {
+				font-size: 14px;
+				font-weight: 600;
 			}
 		</style>
 		<button id="getNextButton">Get Next</button>
 		<button id="getSameButton">Get Same Record Again</button>
 		<button id="getPosts">Get Posts</button>
 		<div id="contextDisplay">
-			{{contextDisplay}}
+			<template is="dom-repeat" items="{{contextDisplay}}" as="contextItem">
+				<paper-item>
+					<div class="layout vertical">
+						<div class="layout horizontal title">
+							<span class="value">{{contextItem.title}}</span>
+						</div>
+						<div class="layout horizontal">
+							<span class="label">{{contextItem.idKey}}:</span>
+							<span class="value">{{contextItem.id}}</span>
+						</div>
+						<div class="layout horizontal">
+							<span class="label">URL:</span>
+							<span class="value">{{contextItem.url}}</span>
+						</div>
+					</div>
+				</paper-item>
+			</template>
 		</div>
 	</template>
 	<script>
@@ -19,7 +57,6 @@ Polymer({
 	properties: {
 		context: {
 			type: Object,
-			observer: 'onContextChange',
 			notify: true
 		},
 		count: {
@@ -28,7 +65,8 @@ Polymer({
 		},
 		contextDisplay: {
 			type: String,
-			notify: true
+			notify: true,
+			value: []
 		}
 	},
 	attached() {
@@ -44,6 +82,21 @@ Polymer({
 	],
 	onContextChange(newContext) {
 		console.log(this.is, 'onContextChange', arguments);
+		let path = newContext.path;
+		let changedItem = this.get(path);
+		if (!changedItem && path && path.indexOf('*') > -1) {
+			changedItem = newContext.value;
+		}
+		if (changedItem && Object.keys(changedItem).length > 0) {
+			let isArray = Array.isArray(changedItem.model);
+			let contextDispItem = {
+				id: isArray ? changedItem.lastAjaxRequest.requestUrl : changedItem[changedItem.idKey],
+				idKey: changedItem.idKey,
+				url: changedItem.lastAjaxRequest.requestUrl,
+				title: isArray ? 'Array (' + changedItem.model.length + ')' : changedItem.model['title']
+			};
+			this.push('contextDisplay', contextDispItem);
+		}
 	},
 	getNext(evt, detail) {
 		this.count++;
@@ -73,5 +126,6 @@ Polymer({
 		this.fire('iron-signal', {name: 'nowcontextget', data: detailObj});
 	}
 });
+
 	</script>
 </dom-module>

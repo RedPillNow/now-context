@@ -182,7 +182,6 @@ var NowElements;
         NowContext.prototype.onGetRequest = function (evt) {
             var _this = this;
             var detail = evt.detail;
-            console.log(this.is, 'onGetRequest, detail=', detail);
             if (detail) {
                 var ajax_1 = this.$.getAjax;
                 ajax_1.params = detail.ajax.parameters;
@@ -289,15 +288,29 @@ var NowElements;
         NowContext.prototype.updateContext = function (ironRequest, ajax, detail) {
             try {
                 var response = ironRequest.response;
-                var ajaxReq = this.getAjaxRequest(ironRequest, ajax);
-                var contextItem = this.getContextItem(ironRequest, ajaxReq, detail.ajax.idKey);
-                var contextItemKey = this.getContextKey(ajaxReq, contextItem);
-                var existingContextItem = this._findContextItem(contextItemKey);
-                if (existingContextItem) {
-                    contextItem = Object.assign(existingContextItem, contextItem);
+                if (response) {
+                    var ajaxReq = this.getAjaxRequest(ironRequest, ajax);
+                    var contextItem = this.getContextItem(ironRequest, ajaxReq, detail.ajax.idKey);
+                    var contextItemKey = this.getContextKey(ajaxReq, contextItem);
+                    var isUrl = false;
+                    if ((contextItemKey && contextItemKey.indexOf) && (contextItemKey.indexOf('http:') > -1 || contextItemKey.indexOf('https:') > -1)) {
+                        isUrl = true;
+                    }
+                    var existingContextItem = this.findContextItem(contextItemKey);
+                    if (existingContextItem) {
+                        contextItem = Object.assign(existingContextItem, contextItem);
+                    }
+                    if (!isUrl) {
+                        var path = 'context.' + contextItemKey;
+                        this.set(path, contextItem);
+                    }
+                    else {
+                        this.context[contextItemKey] = contextItem;
+                        this.notifyPath('context.*', this.context[contextItemKey]);
+                    }
+                    return true;
                 }
-                this.context[contextItemKey] = contextItem;
-                return true;
+                return false;
             }
             catch (e) {
                 return false;
@@ -313,14 +326,14 @@ var NowElements;
             }
             return contextItemKey;
         };
-        NowContext.prototype._findContextItem = function (contextItemKey) {
+        NowContext.prototype.findContextItem = function (contextItemKey) {
             var context = this.context;
             if (context.hasOwnProperty(contextItemKey)) {
                 return context[contextItemKey];
             }
             return null;
         };
-        NowContext.prototype.onRequestResponse = function (evt) {
+        NowContext.prototype._onRequestResponse = function (evt) {
             var detail = evt.detail;
         };
         NowContext.prototype._dispatchEvent = function (options) {

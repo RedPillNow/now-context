@@ -175,7 +175,7 @@ namespace NowElements {
 		 */
 		onGetRequest(evt: CustomEvent) {
 			let detail = evt.detail;
-			console.log(this.is, 'onGetRequest, detail=', detail);
+			// console.log(this.is, 'onGetRequest, detail=', detail);
 			if (detail) {
 				let ajax = this.$.getAjax;
 				ajax.params = detail.ajax.parameters;
@@ -353,26 +353,49 @@ namespace NowElements {
 		/**
 		 * Update this elements context property with the new ajax response
 		 * @private
-		 * @param {*} ironRequest The iron-request element
-		 * @param {*} ajax The iron-ajax element
-		 * @returns
+		 * @param {any} ironRequest The iron-request element
+		 * @param {any} ajax The iron-ajax element
+		 * @param {any} detail
+		 * @property {string} detail.ajax.idKey - The key that is the ID of the model
+		 * @property {any} detail.ajax.payload
+		 * @property {any} detail.ajax.parameters
+		 * @property {string} detail.ajax.contentType
+		 * @property {string} detail.ajax.handleAs
+		 * @property {string} detail.ajax.url
+		 * @property {any} detail.context
+		 * @property {HTMLElement} detail.context.element
+		 * @property {any} detail.context.model
+		 * @returns {boolean}
 		 */
 		private updateContext(ironRequest: any, ajax: any, detail: any) {
 			try {
 				let response = ironRequest.response;
-				let ajaxReq = this.getAjaxRequest(ironRequest, ajax);
-				let contextItem = this.getContextItem(ironRequest, ajaxReq, detail.ajax.idKey);
-				let contextItemKey = this.getContextKey(ajaxReq, contextItem);
-				let existingContextItem = this._findContextItem(contextItemKey);
-				if (existingContextItem) {
-					contextItem = Object.assign(existingContextItem, contextItem);
+				if (response) {
+					let ajaxReq = this.getAjaxRequest(ironRequest, ajax);
+					let contextItem = this.getContextItem(ironRequest, ajaxReq, detail.ajax.idKey);
+					let contextItemKey = this.getContextKey(ajaxReq, contextItem);
+					let isUrl = false;
+					if ((contextItemKey && contextItemKey.indexOf) && (contextItemKey.indexOf('http:') > -1 || contextItemKey.indexOf('https:') > -1)) {
+						isUrl = true;
+					}
+					let existingContextItem = this.findContextItem(contextItemKey);
+					if (existingContextItem) {
+						contextItem = Object.assign(existingContextItem, contextItem);
+					}
+					if (!isUrl) {
+						let path = 'context.' + contextItemKey;
+						this.set(path, contextItem);
+					} else {
+						this.context[contextItemKey] = contextItem;
+						this.notifyPath('context.*', this.context[contextItemKey]);
+					}
+					return true;
 				}
-				this.context[contextItemKey] = contextItem;
-				return true;
+				return false;
 			} catch (e) {
 				return false;
 			}
-        }
+		}
 		/**
 		 * Determine the context key and return it
 		 * @private
@@ -395,7 +418,7 @@ namespace NowElements {
 		 * @param {any} contextItemKey
 		 * @returns {Now.ContextItem}
 		 */
-		private _findContextItem(contextItemKey): Now.ContextItem {
+		findContextItem(contextItemKey): Now.ContextItem {
 			let context = this.context;
 			if (context.hasOwnProperty(contextItemKey)) {
 				return context[contextItemKey];
@@ -406,7 +429,7 @@ namespace NowElements {
 		 * This is a basic request/response event handler
 		 * @param {CustomEvent} evt
 		 */
-		onRequestResponse(evt: CustomEvent) {
+		private _onRequestResponse(evt: CustomEvent) {
 			let detail = evt.detail;
 
 		}

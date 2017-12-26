@@ -14,7 +14,9 @@
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^1.0.0",
     "web-component-tester": "^5.0.0",
     "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.22",
-    "polymer-ts": "^0.1.28"
+    "polymer-ts": "^0.1.28",
+    "paper-item": "PolymerElements/paper-item#^1.0.0",
+    "iron-flex-layout": "PolymerElements/iron-flex-layout#^1.0.0"
   },
   "ignore": [
     "/*",
