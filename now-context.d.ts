@@ -31,6 +31,23 @@ declare namespace Now {
         lastAjaxRequest: AjaxRequest;
         model: any;
     }
+    class PubSubListener {
+        private _eventName;
+        private _handler;
+        private _context;
+        constructor(eventName: any, handler: any, context?: any);
+        eventName: string;
+        handler: any;
+        context: any;
+    }
+    class PubSub {
+        private _listeners;
+        constructor();
+        listeners: any;
+        on(eventName: any, fn: any, context: any): void;
+        off(eventName: any, fn: any): void;
+        trigger(eventName: any, data: any): void;
+    }
 }
 declare namespace NowElements {
     class NowContext extends NowElements.BaseElement {
@@ -42,16 +59,18 @@ declare namespace NowElements {
                 notify: boolean;
             };
         };
-        attached(): void;
-        onGetRequest(evt: CustomEvent): any;
-        onPutRequest(evt: CustomEvent): any;
-        onPostRequest(evt: CustomEvent): any;
-        onDeleteRequest(evt: CustomEvent): any;
-        onPatchRequest(evt: CustomEvent): any;
-        getAjaxRequest(ironRequest: any, ajax: any): Now.AjaxRequest;
-        getContextItem(ironRequest: any, ajaxRequest: Now.AjaxRequest, idKey: string): Now.ContextItem;
-        private updateContext(ironRequest, ajax, detail);
-        private getContextKey(ajaxReq, contextItem);
+        constructor();
+        connectedCallback(): void;
+        disconnectedCallback(): void;
+        private _onGetRequest(evt);
+        private _onPutRequest(evt);
+        private _onPostRequest(evt);
+        private _onDeleteRequest(evt);
+        private _onPatchRequest(evt);
+        private _getAjaxRequest(ironRequest, ajax);
+        private _createContextItem(ironRequest, ajaxRequest, idKey);
+        private _updateContext(ironRequest, ajax, detail);
+        private _getContextKey(ajaxReq, contextItem);
         findContextItem(contextItemKey: any): Now.ContextItem;
         private _onRequestResponse(evt);
         private _dispatchEvent(options);

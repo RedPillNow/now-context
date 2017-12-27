@@ -90,18 +90,134 @@ var Now;
         }
     }
     Now.ContextItem = ContextItem;
+    class PubSubListener {
+        constructor(eventName, handler, context) {
+            this.eventName = eventName;
+            this.handler = handler;
+            this.context = context;
+        }
+        get eventName() {
+            return this._eventName;
+        }
+        set eventName(eventName) {
+            if (eventName) {
+                this._eventName = eventName;
+            }
+            else {
+                throw new Error('The eventName cannot be null, undefined or empty string');
+            }
+        }
+        get handler() {
+            return this._handler;
+        }
+        set handler(handler) {
+            if (handler) {
+                if (typeof handler === 'function') {
+                    this._handler = handler;
+                }
+                else {
+                    throw new Error('The handler must be a function, you passed in a ' + typeof handler);
+                }
+            }
+            else {
+                throw new Error('The handler cannot be null, undefined or empty string');
+            }
+        }
+        get context() {
+            return this._context;
+        }
+        set context(context) {
+            this._context = context;
+        }
+    }
+    Now.PubSubListener = PubSubListener;
+    class PubSub {
+        constructor() {
+            this._events = {};
+        }
+        get events() {
+            return this._events;
+        }
+        set events(events) {
+            this._events = events || {};
+        }
+        get triggeredEvts() {
+            return this._triggeredEvts || [];
+        }
+        set triggeredEvts(triggeredEvts) {
+            this._triggeredEvts = triggeredEvts || [];
+        }
+        on(eventName, fn, context) {
+            if (!this.listenerExists(eventName, context)) {
+                let listener = new PubSubListener(eventName, fn, context);
+                this.events[eventName] = this.events[eventName] || [];
+                this.events[eventName].push(listener);
+            }
+        }
+        off(eventName, fn) {
+            if (this.events[eventName]) {
+                for (let i = 0; i < this.events[eventName].length; i++) {
+                    if (this.events[eventName][i].handler === fn) {
+                        this.events[eventName].splice(i, 1);
+                        break;
+                    }
+                }
+            }
+        }
+        trigger(eventName, data) {
+            let count = 0;
+            if (this.events[eventName]) {
+                this.events[eventName].forEach((listener) => {
+                    if (listener.context && listener.handler && listener.handler.call) {
+                        count++;
+                        listener.handler.call(listener.context, data);
+                    }
+                    else {
+                        if (listener.handler && typeof listener.handler === 'function') {
+                            count++;
+                            listener.handler(data);
+                        }
+                        else {
+                            throw new Error('It appears that the ' + eventName + ' handler is not a function!');
+                        }
+                    }
+                });
+            }
+            let dispatchedEvts = this.triggeredEvts;
+            let evtObj = {
+                time: new Date(),
+                eventName: eventName,
+                listenerCount: count
+            };
+            dispatchedEvts.push(evtObj);
+            this.triggeredEvts = dispatchedEvts;
+        }
+        listenerExists(eventName, context) {
+            if (eventName && context) {
+                let event = this.events[eventName];
+                if (event) {
+                    let found = event.filter((item, idx, arr) => {
+                        return item.context === context;
+                    });
+                    return found && found.length > 0;
+                }
+            }
+            return false;
+        }
+    }
+    Now.PubSub = PubSub;
 })(Now || (Now = {}));
 var NowElements;
 (function (NowElements) {
     class NowContext extends NowElements.BaseElement {
         constructor() {
             super();
+            this.pubsub = new Now.PubSub();
             this.getListener = this._onGetRequest.bind(this);
             this.putListener = this._onPutRequest.bind(this);
             this.postListener = this._onPostRequest.bind(this);
             this.deleteListener = this._onDeleteRequest.bind(this);
             this.patchListener = this._onPatchRequest.bind(this);
-            this.requestResponseListener = this._onRequestResponse.bind(this);
         }
         static get is() { return 'now-context'; }
         static get properties() {
@@ -110,7 +226,8 @@ var NowElements;
                     type: Object,
                     value: {},
                     notify: true
-                }
+                },
+                pubsub: Object
             };
         }
         connectedCallback() {
@@ -121,7 +238,6 @@ var NowElements;
             window.addEventListener('nowcontextpost', this.postListener);
             window.addEventListener('nowcontextdelete', this.deleteListener);
             window.addEventListener('nowcontextpatch', this.patchListener);
-            window.addEventListener('nowcontextreqres', this.requestResponseListener);
         }
         disconnectedCallback() {
             super.disconnectedCallback();
@@ -130,7 +246,6 @@ var NowElements;
             window.removeEventListener('nowcontextpost', this.postListener);
             window.removeEventListener('nowcontextdelete', this.deleteListener);
             window.removeEventListener('nowcontextpatch', this.patchListener);
-            window.removeEventListener('nowcontextreqres', this.requestResponseListener);
         }
         _onGetRequest(evt) {
             let detail = evt.detail;
@@ -142,6 +257,7 @@ var NowElements;
                 ajax.contentType = detail.ajax.contentType || 'application/json';
                 return ajax.generateRequest().completes
                     .then((ironRequest) => {
+                    this.triggerEvt('nowContextGetReqDone', ironRequest.response);
                     return this._updateContext(ironRequest, ajax, detail);
                 })
                     .catch((err) => {
@@ -163,6 +279,7 @@ var NowElements;
                 ajax.body = detail.ajax.payload;
                 return ajax.generateRequest().completes
                     .then((ironRequest) => {
+                    this.triggerEvt('nowContextPutReqDone', ironRequest.response);
                     return this._updateContext(ironRequest, ajax, detail);
                 })
                     .catch((err) => {
@@ -184,6 +301,7 @@ var NowElements;
                 ajax.body = detail.ajax.payload;
                 return ajax.generateRequest().completes
                     .then((ironRequest) => {
+                    this.triggerEvt('nowContextPostReqDone', ironRequest.response);
                     return this._updateContext(ironRequest, ajax, detail);
                 })
                     .catch((err) => {
@@ -219,6 +337,7 @@ var NowElements;
                 ajax.body = detail.ajax.payload;
                 return ajax.generateRequest().completes
                     .then((ironRequest) => {
+                    this.triggerEvt('nowContextPatchReqDone', ironRequest.response);
                     return this._updateContext(ironRequest, ajax, detail);
                 })
                     .catch((err) => {
@@ -267,9 +386,12 @@ var NowElements;
                         isUrl = true;
                     }
                     let existingContextItem = this.findContextItem(contextItemKey);
+                    let itemMerged = false;
                     if (existingContextItem) {
+                        itemMerged = true;
                         contextItem = Object.assign(existingContextItem, contextItem);
                     }
+                    let evtName = itemMerged ? 'nowContextItemUpdated' : 'nowContextItemAdded';
                     if (!isUrl) {
                         let path = 'context.' + contextItemKey;
                         this.set(path, contextItem);
@@ -278,6 +400,7 @@ var NowElements;
                         this.context[contextItemKey] = contextItem;
                         this.notifyPath('context.*', this.context[contextItemKey]);
                     }
+                    this.triggerEvt(evtName, contextItem);
                     return true;
                 }
                 return false;
@@ -303,24 +426,13 @@ var NowElements;
             }
             return null;
         }
-        _onRequestResponse(evt) {
-            let detail = evt.detail;
+        triggerEvt(eventName, data) {
+            let pubsub = this.get('pubsub');
+            pubsub.trigger(eventName, data);
         }
-        _dispatchEvent(options) {
-            let event = null;
-            options = options || {};
-            if (options.type && options.target) {
-                let node = options.target || window;
-                let bubbles = options.bubbles === undefined ? true : options.bubbles;
-                let cancelable = Boolean(options.cancelable);
-                event = new Event(options.type, { bubbles: bubbles, cancelable: cancelable });
-                event['detail'] = options.detail;
-                node.dispatchEvent(event);
-            }
-            else {
-                throw new Error('Event options must include an event "type" and event "target"');
-            }
-            return event;
+        listenEvt(eventName, fn, context) {
+            let pubsub = this.get('pubsub');
+            pubsub.on(eventName, fn, context);
         }
     }
     NowElements.NowContext = NowContext;

@@ -1,8 +1,7 @@
 <link rel="import" href="../../paper-item/paper-item.html">
-<link rel="import" href="../../iron-flex-layout/iron-flex-layout-classes">
 <dom-module id="now-context-test">
 	<template>
-		<style is="custom-style" include="iron-flex iron-flex-alignment">
+		<style>
 			:host {
 				display: block;
 				box-sizing: border-box;
@@ -30,11 +29,20 @@
 				font-size: 14px;
 				font-weight: 600;
 			}
+			.getRequestCount {
+				font-size: 12px;
+			}
 		</style>
-		<button id="getNextButton" on-click="getNext">Get Next</button>
-		<button id="getSameButton" on-click="getSame" disabled$="{{getSameDisabled}}">Get Same Record Again</button>
-		<button id="getPosts" on-click="getPosts">Get Posts</button>
-		<button id="clearContext" on-click="clearDisplay">Clear Display</button>
+		<div class="layout horizontal">
+			<button on-click="getNext">Get Next</button>
+			<button on-click="getSame" disabled$="{{getSameDisabled}}">Get Same Record Again</button>
+			<button on-click="getPosts">Get Posts</button>
+			<button id="clearContext" on-click="clearDisplay">Clear Display</button>
+			<span class="flex"></span>
+			<div class="getRequestCount">
+				<span>{{getReqCount}} GET requests have been made</span>
+			</div>
+		</div>
 		<div>
 			<p>In order to access the context there is a global variable called "NowContext.context". This will be the context object which contains all the responses (that were different).</p>
 			<p>If an item does not have an id (for example the response was an array) then the url will be the key, otherwise the id is the key.</p>
@@ -73,6 +81,10 @@ class NowContextTest extends Polymer.Element {
 				type: Number,
 				value: 0
 			},
+			getReqCount: {
+				type: Number,
+				value: 0
+			},
 			contextDisplay: {
 				type: String,
 				notify: true,
@@ -94,6 +106,14 @@ class NowContextTest extends Polymer.Element {
 
 	constructor() {
 		super();
+	}
+
+	connectedCallback() {
+		super.connectedCallback();
+		setTimeout(() => {
+			NowContext.listenEvt('nowContextGetReqDone', this.onPubSubGetReqDone, this);
+			NowContext.listenEvt('nowContextItemUpdated', this.onPubSubContextUpdated);
+		}, 1000);
 	}
 
 	_isGetSameDisabled(count) {
@@ -154,6 +174,15 @@ class NowContextTest extends Polymer.Element {
 	clearDisplay(evt) {
 		this.set('contextDisplay', []);
 		this.set('count', 0);
+	}
+
+	onPubSubGetReqDone(data) {
+		this.getReqCount++;
+		console.log(NowContextTest.is, 'onPubSubGetReqDone, This is the handler for the nowContextGetReqDone pubsub event', data, 'Handler context=', this);
+	}
+
+	onPubSubContextUpdated(data) {
+		console.log(NowContextTest.is, 'onPubSubContextUpdated, This is the handler for the nowContextItemUpdated pubsub event', data, 'Handler context=', this);
 	}
 }
 customElements.define(NowContextTest.is, NowContextTest);

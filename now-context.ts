@@ -130,6 +130,138 @@ namespace Now {
 			this._model = model;
 		}
 	}
+
+	export class PubSubListener {
+		private _eventName: string;
+		private _handler: any;
+		private _context: any;
+
+		constructor(eventName, handler, context?) {
+			this.eventName = eventName;
+			this.handler = handler;
+			this.context = context;
+		}
+
+		get eventName() {
+			return this._eventName;
+		}
+
+		set eventName(eventName) {
+			if (eventName) {
+				this._eventName = eventName;
+			} else {
+				throw new Error('The eventName cannot be null, undefined or empty string');
+			}
+		}
+
+		get handler() {
+			return this._handler;
+		}
+
+		set handler(handler: any) {
+			if (handler) {
+				if (typeof handler === 'function') {
+					this._handler = handler;
+				} else {
+					throw new Error('The handler must be a function, you passed in a ' + typeof handler);
+				}
+			} else {
+				throw new Error('The handler cannot be null, undefined or empty string');
+			}
+		}
+
+		get context() {
+			return this._context;
+		}
+
+		set context(context) {
+			this._context = context;
+		}
+	}
+
+	export class PubSub {
+		private _events: any;
+		private _triggeredEvts: any[];
+
+		constructor() {
+			this._events = {};
+		}
+
+		get events() {
+			return this._events;
+		}
+
+		set events(events) {
+			this._events = events || {};
+		}
+
+		get triggeredEvts() {
+			return this._triggeredEvts || [];
+		}
+
+		set triggeredEvts(triggeredEvts) {
+			this._triggeredEvts = triggeredEvts || [];
+		}
+
+		on(eventName, fn, context) {
+			if (!this.listenerExists(eventName, context)) {
+				let listener = new PubSubListener(eventName, fn, context);
+				this.events[eventName] = this.events[eventName] || [];
+				this.events[eventName].push(listener);
+			}
+		}
+
+		off(eventName, fn) {
+			if (this.events[eventName]) {
+				for (let i = 0; i < this.events[eventName].length; i++) {
+					if (this.events[eventName][i].handler === fn) {
+						this.events[eventName].splice(i, 1);
+						break;
+					}
+				}
+			}
+		}
+
+		trigger(eventName, data) {
+			let count = 0;
+			if (this.events[eventName]) {
+				this.events[eventName].forEach((listener: PubSubListener) => {
+					if (listener.context && listener.handler && listener.handler.call) {
+						count++;
+						listener.handler.call(listener.context, data);
+					} else {
+						if (listener.handler && typeof listener.handler === 'function') {
+							count++;
+							listener.handler(data);
+						} else {
+							throw new Error('It appears that the ' + eventName + ' handler is not a function!');
+						}
+					}
+				});
+			}
+			let dispatchedEvts = this.triggeredEvts;
+			let evtObj = {
+				time: new Date(),
+				eventName: eventName,
+				listenerCount: count
+			}
+			dispatchedEvts.push(evtObj);
+			this.triggeredEvts = dispatchedEvts;
+		}
+
+		listenerExists(eventName, context) {
+			if (eventName && context) {
+				let event = this.events[eventName];
+				if (event) {
+					let found = event.filter((item, idx, arr) => {
+						return item.context === context;
+					});
+					return found && found.length > 0;
+				}
+			}
+			return false;
+		}
+	}
 }
 
 namespace NowElements {
@@ -148,18 +280,19 @@ namespace NowElements {
 					type: Object,
 					value: {},
 					notify: true
-				}
+				},
+				pubsub: Object
 			}
 		}
 
 		constructor() {
 			super();
+			(<any>this).pubsub = new Now.PubSub();
 			(<any>this).getListener = this._onGetRequest.bind(this);
 			(<any>this).putListener = this._onPutRequest.bind(this);
 			(<any>this).postListener = this._onPostRequest.bind(this);
 			(<any>this).deleteListener = this._onDeleteRequest.bind(this);
 			(<any>this).patchListener = this._onPatchRequest.bind(this);
-			(<any>this).requestResponseListener = this._onRequestResponse.bind(this);
 		}
 
 		connectedCallback() {
@@ -171,7 +304,6 @@ namespace NowElements {
 			window.addEventListener('nowcontextpost', (<any>this).postListener);
 			window.addEventListener('nowcontextdelete', (<any>this).deleteListener);
 			window.addEventListener('nowcontextpatch', (<any>this).patchListener);
-			window.addEventListener('nowcontextreqres', (<any>this).requestResponseListener);
 		}
 
 		disconnectedCallback() {
@@ -181,7 +313,6 @@ namespace NowElements {
 			window.removeEventListener('nowcontextpost', (<any>this).postListener);
 			window.removeEventListener('nowcontextdelete', (<any>this).deleteListener);
 			window.removeEventListener('nowcontextpatch', (<any>this).patchListener);
-			window.removeEventListener('nowcontextreqres', (<any>this).requestResponseListener);
 		}
 
 		/**
@@ -197,7 +328,8 @@ namespace NowElements {
 		 * @property {any} evt.detail.context
 		 * @property {HTMLElement} evt.detail.context.element
 		 * @property {any} evt.detail.context.model
-		 * @listens iron-signal-nowcontextget
+		 * @listens window.nowcontextget
+		 * @event nowContextGetReqDone
 		 * @returns {Promise}
 		 */
 		private _onGetRequest(evt: CustomEvent) {
@@ -211,6 +343,7 @@ namespace NowElements {
 				ajax.contentType = detail.ajax.contentType || 'application/json';
 				return ajax.generateRequest().completes
 					.then((ironRequest) => {
+						this.triggerEvt('nowContextGetReqDone', ironRequest.response);
                         return this._updateContext(ironRequest, ajax, detail);
 					})
 					.catch((err) => {
@@ -233,7 +366,8 @@ namespace NowElements {
 		 * @property {any} evt.detail.context
 		 * @property {HTMLElement} evt.detail.context.element
 		 * @property {any} evt.detail.context.model
-		 * @listens iron-signal-nowcontextput
+		 * @listens window.nowcontextput
+		 * @event nowContextPutReqDone
 		 * @returns {Promise}
 		 */
 		private _onPutRequest(evt: CustomEvent) {
@@ -247,6 +381,7 @@ namespace NowElements {
 				ajax.body = detail.ajax.payload;
 				return ajax.generateRequest().completes
 					.then((ironRequest) => {
+						this.triggerEvt('nowContextPutReqDone', ironRequest.response);
 						return this._updateContext(ironRequest, ajax, detail);
 					})
 					.catch((err) => {
@@ -269,7 +404,8 @@ namespace NowElements {
 		 * @property {any} evt.detail.context
 		 * @property {HTMLElement} evt.detail.context.element
 		 * @property {any} evt.detail.context.model
-		 * @listens iron-signal-nowcontextpost
+		 * @listens window.nowcontextpost
+		 * @event nowContextPostReqDone
 		 * @returns {Promise}
 		 */
 		private _onPostRequest(evt: CustomEvent) {
@@ -283,6 +419,7 @@ namespace NowElements {
 				ajax.body = detail.ajax.payload;
 				return ajax.generateRequest().completes
 					.then((ironRequest) => {
+						this.triggerEvt('nowContextPostReqDone', ironRequest.response);
 						return this._updateContext(ironRequest, ajax, detail);
 					})
 					.catch((err) => {
@@ -305,7 +442,7 @@ namespace NowElements {
 		 * @property {any} evt.detail.context
 		 * @property {HTMLElement} evt.detail.context.element
 		 * @property {any} evt.detail.context.model
-		 * @listens iron-signal-nowcontextdelete
+		 * @listens window.nowcontextdelete
 		 * @returns {Promise}
 		 */
 		private _onDeleteRequest(evt: CustomEvent) {
@@ -334,7 +471,8 @@ namespace NowElements {
 		 * @property {any} evt.detail.context
 		 * @property {HTMLElement} evt.detail.context.element
 		 * @property {any} evt.detail.context.model
-		 * @listens iron-signal-nowcontextpatch
+		 * @listens window.nowcontextpatch
+		 * @event nowContextPatchReqDone
 		 * @returns {Promise}
 		 */
 		private _onPatchRequest(evt: CustomEvent) {
@@ -348,6 +486,7 @@ namespace NowElements {
 				ajax.body = detail.ajax.payload;
 				return ajax.generateRequest().completes
 					.then((ironRequest) => {
+						this.triggerEvt('nowContextPatchReqDone', ironRequest.response);
 						return this._updateContext(ironRequest, ajax, detail);
 					})
 					.catch((err) => {
@@ -410,6 +549,8 @@ namespace NowElements {
 		 * @property {any} detail.context
 		 * @property {HTMLElement} detail.context.element
 		 * @property {any} detail.context.model
+		 * @event nowContextItemUpdated
+		 * @event nowContextItemAdded
 		 * @returns {boolean}
 		 */
 		private _updateContext(ironRequest: any, ajax: any, detail: any) {
@@ -424,9 +565,12 @@ namespace NowElements {
 						isUrl = true;
 					}
 					let existingContextItem = this.findContextItem(contextItemKey);
+					let itemMerged = false;
 					if (existingContextItem) {
+						itemMerged = true;
 						contextItem = Object.assign(existingContextItem, contextItem);
 					}
+					let evtName = itemMerged ? 'nowContextItemUpdated' : 'nowContextItemAdded';
 					if (!isUrl) {
 						let path = 'context.' + contextItemKey;
 						this.set(path, contextItem);
@@ -434,6 +578,7 @@ namespace NowElements {
 						(<any> this).context[contextItemKey] = contextItem;
 						this.notifyPath('context.*', (<any> this).context[contextItemKey]);
 					}
+					this.triggerEvt(evtName, contextItem);
 					return true;
 				}
 				return false;
@@ -471,28 +616,24 @@ namespace NowElements {
 			return null;
 		}
 		/**
-		 * This is a basic request/response event handler
-		 * @param {CustomEvent} evt
+		 * Trigger a pubsub event. This does not create a true Event or CustomEvent item
+		 * @param {string} eventName
+		 * @param {any} data
 		 */
-		private _onRequestResponse(evt: CustomEvent) {
-			let detail = evt.detail;
-
+		triggerEvt(eventName, data) {
+			let pubsub: Now.PubSub = this.get('pubsub');
+			pubsub.trigger(eventName, data);
 		}
-
-		private _dispatchEvent(options): Event {
-			let event: Event = null;
-			options = options || {};
-			if (options.type && options.target) {
-				let node = options.target || window;
-				let bubbles = options.bubbles === undefined ? true : options.bubbles;
-				let cancelable = Boolean(options.cancelable);
-				event = new Event(options.type, {bubbles: bubbles, cancelable: cancelable})
-				event['detail'] = options.detail;
-				node.dispatchEvent(event);
-			} else {
-				throw new Error('Event options must include an event "type" and event "target"');
-			}
-			return event;
+		/**
+		 * Subscribe to pubsub events
+		 *
+		 * @param {any} eventName The name of the event to listen for
+		 * @param {function} fn The callback function
+		 * @param {any} context The context in which to run the callback
+		 */
+		listenEvt(eventName, fn, context) {
+			let pubsub: Now.PubSub = this.get('pubsub');
+			pubsub.on(eventName, fn, context);
 		}
 	}
 }
