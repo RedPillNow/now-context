@@ -11,7 +11,7 @@
 
 	<link rel="import" href="../../polymer/polymer-element.html">
 	<link rel="import" href="../now-context.html">
-	<!-- <link rel="import" href="now-context-test.html"> -->
+	<link rel="import" href="now-context-test.html">
 
 	<style is="custom-style" include="demo-pages-shared-styles">
 		#mainDiv {
@@ -25,12 +25,14 @@
 <div id="mainDiv" class="vertical-section-container centered">
 	<h3>Basic now-context Demo</h3>
 	<demo-snippet>
-		<dom-bind>
-			<template>
-				<now-context context="{{nowContext}}"></now-context>
-				<!-- <now-context-test context="{{nowContext}}"></now-context-test> -->
-			</template>
-		</dom-bind>
+		<template>
+			<dom-bind>
+				<template>
+					<now-context context="{{nowContext}}"></now-context>
+					<now-context-test context="{{nowContext}}"></now-context-test>
+				</template>
+			</dom-bind>
+		</template>
 	</demo-snippet>
 </div>
 </body>

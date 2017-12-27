@@ -66,13 +66,24 @@ var dist = function(subpath) {
 	return !subpath ? DIST : path.join(DIST, subpath);
 };
 
+/** True if any errors have been sent to handleError() */
+let haveErrors = false;
+/** Set to true to fail as soon as an error is handled by handleError instead of just toggling the haveErrors flag. **/
+let hardFail = false;
 /**
  *  Standard error handler, for use with the plumber plugin or on() function.
  */
 function handleError(error) {
-	console.log("Error (ending current task):", error.message);
-	this.emit("end"); //End function
-	process.exit(1);
+	if (hardFail) {
+		const errorMessage = error ? ': ' + error.message : '';
+		util.log('Error(s) found (ending current task)', errorMessage);
+		if (this && this.emit) {
+			this.emit('end'); //End function
+		}
+		process.exit(1);
+	} else {
+		haveErrors = true;
+	}
 }
 
 /** Configures proxy for use with BrowserSync. The getBuildProperties task must be called first. */
@@ -109,6 +120,24 @@ gulp.task('getBuildProperties', function(callback) {
 	});
 });
 
+/** Handles TypeScript errors; this version decorates the gulp-typescript LongReporter and adds error tracking. */
+function typeScriptReporter() {
+	const longReporter = ts.reporter.longReporter();
+	return {
+		error: function(error) {
+			longReporter.error(error);
+			handleError(error);
+		},
+		finish: function(results) {
+			longReporter.finish(results);
+			if (haveErrors) {
+				hardFail = true;
+				handleError();
+			}
+		}
+	};
+}
+
 // TypeScript support
 var sourcemaps = require('gulp-sourcemaps');
 var ts = require('gulp-typescript');
@@ -116,10 +145,11 @@ var tsProject = ts.createProject('tsconfig.json');
 gulp.task('typescript', function() {
 	const tsResult = tsProject.src()
 		.pipe(sourcemaps.init())
-		.pipe(tsProject(ts.reporter.longReporter()));
+		.pipe(plumber({errorHandler: handleError}))
+		.pipe(tsProject(typeScriptReporter()));
 	return merge([
 		tsResult.dts.pipe(gulpIgnore.exclude(src + '/test/**/*')).pipe(gulp.dest(dist())),
-		tsResult.js.pipe(sourcemaps.write('.')).pipe(gulp.dest(src))
+		tsResult.js.pipe(sourcemaps.write(src)).pipe(gulp.dest(src))
 	]);
 });
 

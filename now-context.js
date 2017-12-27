@@ -1,257 +1,203 @@
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var Now;
 (function (Now) {
-    var AjaxRequest = (function () {
-        function AjaxRequest() {
+    class AjaxRequest {
+        get method() {
+            return this._method;
         }
-        Object.defineProperty(AjaxRequest.prototype, "method", {
-            get: function () {
-                return this._method;
-            },
-            set: function (method) {
-                this._method = method;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(AjaxRequest.prototype, "params", {
-            get: function () {
-                return this._params;
-            },
-            set: function (params) {
-                this._params = params;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(AjaxRequest.prototype, "payload", {
-            get: function () {
-                return this._payload;
-            },
-            set: function (payload) {
-                this._payload = payload;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(AjaxRequest.prototype, "response", {
-            get: function () {
-                return this._response;
-            },
-            set: function (response) {
-                this._response = response;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(AjaxRequest.prototype, "responseType", {
-            get: function () {
-                return this._responseType;
-            },
-            set: function (responseType) {
-                this._responseType = responseType;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(AjaxRequest.prototype, "requestUrl", {
-            get: function () {
-                return this._requestUrl;
-            },
-            set: function (requestUrl) {
-                this._requestUrl = requestUrl;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(AjaxRequest.prototype, "status", {
-            get: function () {
-                return this._status;
-            },
-            set: function (status) {
-                this._status = status;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(AjaxRequest.prototype, "statusText", {
-            get: function () {
-                return this._statusText;
-            },
-            set: function (statusText) {
-                this._statusText = statusText;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(AjaxRequest.prototype, "withCredentials", {
-            get: function () {
-                return this._withCredentials;
-            },
-            set: function (withCredentials) {
-                this._withCredentials = withCredentials;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return AjaxRequest;
-    }());
+        set method(method) {
+            this._method = method;
+        }
+        get params() {
+            return this._params;
+        }
+        set params(params) {
+            this._params = params;
+        }
+        get payload() {
+            return this._payload;
+        }
+        set payload(payload) {
+            this._payload = payload;
+        }
+        get response() {
+            return this._response;
+        }
+        set response(response) {
+            this._response = response;
+        }
+        get responseType() {
+            return this._responseType;
+        }
+        set responseType(responseType) {
+            this._responseType = responseType;
+        }
+        get requestUrl() {
+            return this._requestUrl;
+        }
+        set requestUrl(requestUrl) {
+            this._requestUrl = requestUrl;
+        }
+        get status() {
+            return this._status;
+        }
+        set status(status) {
+            this._status = status;
+        }
+        get statusText() {
+            return this._statusText;
+        }
+        set statusText(statusText) {
+            this._statusText = statusText;
+        }
+        get withCredentials() {
+            return this._withCredentials;
+        }
+        set withCredentials(withCredentials) {
+            this._withCredentials = withCredentials;
+        }
+    }
     Now.AjaxRequest = AjaxRequest;
-    var ContextItem = (function () {
-        function ContextItem() {
+    class ContextItem {
+        get element() {
+            return this._element;
         }
-        Object.defineProperty(ContextItem.prototype, "element", {
-            get: function () {
-                return this._element;
-            },
-            set: function (element) {
-                this._element = element;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ContextItem.prototype, "id", {
-            get: function () {
-                if (this.model && !this._id) {
-                    this._id = this.model[this.idKey];
-                }
-                return this._id;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ContextItem.prototype, "idKey", {
-            get: function () {
-                return this._idKey;
-            },
-            set: function (idKey) {
-                this._idKey = idKey;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ContextItem.prototype, "lastAjaxRequest", {
-            get: function () {
-                return this._lastAjaxRequest;
-            },
-            set: function (lastAjaxRequest) {
-                this._lastAjaxRequest = lastAjaxRequest;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ContextItem.prototype, "model", {
-            get: function () {
-                return this._model;
-            },
-            set: function (model) {
-                this._model = model;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return ContextItem;
-    }());
+        set element(element) {
+            this._element = element;
+        }
+        get id() {
+            if (this.model && !this._id) {
+                this._id = this.model[this.idKey];
+            }
+            return this._id;
+        }
+        get idKey() {
+            return this._idKey;
+        }
+        set idKey(idKey) {
+            this._idKey = idKey;
+        }
+        get lastAjaxRequest() {
+            return this._lastAjaxRequest;
+        }
+        set lastAjaxRequest(lastAjaxRequest) {
+            this._lastAjaxRequest = lastAjaxRequest;
+        }
+        get model() {
+            return this._model;
+        }
+        set model(model) {
+            this._model = model;
+        }
+    }
     Now.ContextItem = ContextItem;
 })(Now || (Now = {}));
 var NowElements;
 (function (NowElements) {
-    var NowContext = (function (_super) {
-        __extends(NowContext, _super);
-        function NowContext() {
-            return _super !== null && _super.apply(this, arguments) || this;
+    class NowContext extends NowElements.BaseElement {
+        constructor() {
+            super();
+            this.getListener = this._onGetRequest.bind(this);
+            this.putListener = this._onPutRequest.bind(this);
+            this.postListener = this._onPostRequest.bind(this);
+            this.deleteListener = this._onDeleteRequest.bind(this);
+            this.patchListener = this._onPatchRequest.bind(this);
+            this.requestResponseListener = this._onRequestResponse.bind(this);
         }
-        Object.defineProperty(NowContext, "is", {
-            get: function () { return 'now-context'; },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(NowContext, "properties", {
-            get: function () {
-                return {
-                    context: {
-                        type: Object,
-                        value: {},
-                        notify: true
-                    }
-                };
-            },
-            enumerable: true,
-            configurable: true
-        });
-        NowContext.prototype.attached = function () {
+        static get is() { return 'now-context'; }
+        static get properties() {
+            return {
+                context: {
+                    type: Object,
+                    value: {},
+                    notify: true
+                }
+            };
+        }
+        connectedCallback() {
+            super.connectedCallback();
             window['NowContext'] = this;
-            document.addEventListener('nowcontextget', this.onGetRequest);
-            document.addEventListener('nowcontextput', this.onPutRequest);
-            document.addEventListener('nowcontextpost', this.onPostRequest);
-            document.addEventListener('nowcontextdelete', this.onDeleteRequest);
-            document.addEventListener('nowcontextpatch', this.onPatchRequest);
-            document.addEventListener('nowcontextreqres', this._onRequestResponse);
-        };
-        NowContext.prototype.onGetRequest = function (evt) {
-            var _this = this;
-            var detail = evt.detail;
+            window.addEventListener('nowcontextget', this.getListener);
+            window.addEventListener('nowcontextput', this.putListener);
+            window.addEventListener('nowcontextpost', this.postListener);
+            window.addEventListener('nowcontextdelete', this.deleteListener);
+            window.addEventListener('nowcontextpatch', this.patchListener);
+            window.addEventListener('nowcontextreqres', this.requestResponseListener);
+        }
+        disconnectedCallback() {
+            super.disconnectedCallback();
+            window.removeEventListener('nowcontextget', this.getListener);
+            window.removeEventListener('nowcontextput', this.putListener);
+            window.removeEventListener('nowcontextpost', this.postListener);
+            window.removeEventListener('nowcontextdelete', this.deleteListener);
+            window.removeEventListener('nowcontextpatch', this.patchListener);
+            window.removeEventListener('nowcontextreqres', this.requestResponseListener);
+        }
+        _onGetRequest(evt) {
+            let detail = evt.detail;
             if (detail) {
-                var ajax_1 = this.$.getAjax;
-                ajax_1.params = detail.ajax.parameters;
-                ajax_1.handleAs = detail.ajax.handleAs || 'json';
-                ajax_1.url = detail.ajax.url;
-                ajax_1.contentType = detail.ajax.contentType || 'application/json';
-                return ajax_1.generateRequest().completes
-                    .then(function (ironRequest) {
-                    return _this.updateContext(ironRequest, ajax_1, detail);
+                let ajax = this.$.getAjax;
+                ajax.params = detail.ajax.parameters;
+                ajax.handleAs = detail.ajax.handleAs || 'json';
+                ajax.url = detail.ajax.url;
+                ajax.contentType = detail.ajax.contentType || 'application/json';
+                return ajax.generateRequest().completes
+                    .then((ironRequest) => {
+                    return this._updateContext(ironRequest, ajax, detail);
                 })
-                    .catch(function (err) {
+                    .catch((err) => {
                     throw new Error(NowContext.is + '.onGetRequest failed');
                 });
             }
             else {
                 throw new Error(NowContext.is + ':iron-signal-nowcontextget: No detail provided in signal');
             }
-        };
-        NowContext.prototype.onPutRequest = function (evt) {
-            var detail = evt.detail;
+        }
+        _onPutRequest(evt) {
+            let detail = evt.detail;
             if (detail) {
-                var ajax = this.$.putAjax;
+                let ajax = this.$.putAjax;
                 ajax.params = detail.ajax.parameters;
                 ajax.handleAs = detail.ajax.handleAs || 'json';
                 ajax.url = detail.ajax.url;
                 ajax.contentType = detail.ajax.contentType || 'application/json';
                 ajax.body = detail.ajax.payload;
-                return ajax.generateRequest().completes;
+                return ajax.generateRequest().completes
+                    .then((ironRequest) => {
+                    return this._updateContext(ironRequest, ajax, detail);
+                })
+                    .catch((err) => {
+                    throw new Error(NowContext.is + '.onPutRequest failed');
+                });
             }
             else {
                 throw new Error(NowContext.is + ',nowcontextput: No detail provided in signal');
             }
-        };
-        NowContext.prototype.onPostRequest = function (evt) {
-            var detail = evt.detail;
+        }
+        _onPostRequest(evt) {
+            let detail = evt.detail;
             if (detail) {
-                var ajax = this.$.postAjax;
+                let ajax = this.$.postAjax;
                 ajax.params = detail.ajax.parameters;
                 ajax.handleAs = detail.ajax.handleAs || 'json';
                 ajax.url = detail.ajax.url;
                 ajax.contentType = detail.ajax.contentType || 'application/json';
                 ajax.body = detail.ajax.payload;
-                return ajax.generateRequest().completes;
+                return ajax.generateRequest().completes
+                    .then((ironRequest) => {
+                    return this._updateContext(ironRequest, ajax, detail);
+                })
+                    .catch((err) => {
+                    throw new Error(NowContext.is + '.onPutRequest failed');
+                });
             }
             else {
                 throw new Error(NowContext.is + ',nowcontextpost: No detail provided in signal');
             }
-        };
-        NowContext.prototype.onDeleteRequest = function (evt) {
-            var detail = evt.detail;
+        }
+        _onDeleteRequest(evt) {
+            let detail = evt.detail;
             if (detail) {
-                var ajax = this.$.deleteAjax;
+                let ajax = this.$.deleteAjax;
                 ajax.params = detail.ajax.parameters;
                 ajax.handleAs = detail.ajax.handleAs || 'json';
                 ajax.url = detail.ajax.url;
@@ -261,25 +207,31 @@ var NowElements;
             else {
                 throw new Error(NowContext.is + ',nowcontextdelete: No detail provided in signal');
             }
-        };
-        NowContext.prototype.onPatchRequest = function (evt) {
-            var detail = evt.detail;
+        }
+        _onPatchRequest(evt) {
+            let detail = evt.detail;
             if (detail) {
-                var ajax = this.$.patchAjax;
+                let ajax = this.$.patchAjax;
                 ajax.params = detail.ajax.parameters;
                 ajax.handleAs = detail.ajax.handleAs || 'json';
                 ajax.url = detail.ajax.url;
                 ajax.contentType = detail.ajax.contentType || 'application/json';
                 ajax.body = detail.ajax.payload;
-                return ajax.generateRequest().completes;
+                return ajax.generateRequest().completes
+                    .then((ironRequest) => {
+                    return this._updateContext(ironRequest, ajax, detail);
+                })
+                    .catch((err) => {
+                    throw new Error(NowContext.is + '.onPutRequest failed');
+                });
             }
             else {
                 throw new Error(NowContext.is + ',nowcontextpatch: No detail provided in signal');
             }
-        };
-        NowContext.prototype.getAjaxRequest = function (ironRequest, ajax) {
+        }
+        _getAjaxRequest(ironRequest, ajax) {
             if (ironRequest && ajax) {
-                var ajaxReq = new Now.AjaxRequest();
+                let ajaxReq = new Now.AjaxRequest();
                 ajaxReq.response = ironRequest.response;
                 ajaxReq.requestUrl = ironRequest.url;
                 ajaxReq.status = ironRequest.status;
@@ -292,34 +244,34 @@ var NowElements;
                 return ajaxReq;
             }
             return null;
-        };
-        NowContext.prototype.getContextItem = function (ironRequest, ajaxRequest, idKey) {
+        }
+        _createContextItem(ironRequest, ajaxRequest, idKey) {
             if (ironRequest && ajaxRequest) {
-                var contextItem = new Now.ContextItem();
+                let contextItem = new Now.ContextItem();
                 contextItem.idKey = idKey;
                 contextItem.model = ironRequest.response;
                 contextItem.lastAjaxRequest = ajaxRequest;
                 return contextItem;
             }
             return null;
-        };
-        NowContext.prototype.updateContext = function (ironRequest, ajax, detail) {
+        }
+        _updateContext(ironRequest, ajax, detail) {
             try {
-                var response = ironRequest.response;
+                let response = ironRequest.response;
                 if (response) {
-                    var ajaxReq = this.getAjaxRequest(ironRequest, ajax);
-                    var contextItem = this.getContextItem(ironRequest, ajaxReq, detail.ajax.idKey);
-                    var contextItemKey = this.getContextKey(ajaxReq, contextItem);
-                    var isUrl = false;
+                    let ajaxReq = this._getAjaxRequest(ironRequest, ajax);
+                    let contextItem = this._createContextItem(ironRequest, ajaxReq, detail.ajax.idKey);
+                    let contextItemKey = this._getContextKey(ajaxReq, contextItem);
+                    let isUrl = false;
                     if ((contextItemKey && contextItemKey.indexOf) && (contextItemKey.indexOf('http:') > -1 || contextItemKey.indexOf('https:') > -1)) {
                         isUrl = true;
                     }
-                    var existingContextItem = this.findContextItem(contextItemKey);
+                    let existingContextItem = this.findContextItem(contextItemKey);
                     if (existingContextItem) {
                         contextItem = Object.assign(existingContextItem, contextItem);
                     }
                     if (!isUrl) {
-                        var path = 'context.' + contextItemKey;
+                        let path = 'context.' + contextItemKey;
                         this.set(path, contextItem);
                     }
                     else {
@@ -333,9 +285,9 @@ var NowElements;
             catch (e) {
                 return false;
             }
-        };
-        NowContext.prototype.getContextKey = function (ajaxReq, contextItem) {
-            var contextItemKey = null;
+        }
+        _getContextKey(ajaxReq, contextItem) {
+            let contextItemKey = null;
             if (Array.isArray(ajaxReq.response)) {
                 contextItemKey = ajaxReq.requestUrl;
             }
@@ -343,24 +295,24 @@ var NowElements;
                 contextItemKey = contextItem.id;
             }
             return contextItemKey;
-        };
-        NowContext.prototype.findContextItem = function (contextItemKey) {
-            var context = this.get('context');
+        }
+        findContextItem(contextItemKey) {
+            let context = this.get('context');
             if (context.hasOwnProperty(contextItemKey)) {
                 return context[contextItemKey];
             }
             return null;
-        };
-        NowContext.prototype._onRequestResponse = function (evt) {
-            var detail = evt.detail;
-        };
-        NowContext.prototype._dispatchEvent = function (options) {
-            var event = null;
+        }
+        _onRequestResponse(evt) {
+            let detail = evt.detail;
+        }
+        _dispatchEvent(options) {
+            let event = null;
             options = options || {};
             if (options.type && options.target) {
-                var node = options.target || window;
-                var bubbles = options.bubbles === undefined ? true : options.bubbles;
-                var cancelable = Boolean(options.cancelable);
+                let node = options.target || window;
+                let bubbles = options.bubbles === undefined ? true : options.bubbles;
+                let cancelable = Boolean(options.cancelable);
                 event = new Event(options.type, { bubbles: bubbles, cancelable: cancelable });
                 event['detail'] = options.detail;
                 node.dispatchEvent(event);
@@ -369,9 +321,8 @@ var NowElements;
                 throw new Error('Event options must include an event "type" and event "target"');
             }
             return event;
-        };
-        return NowContext;
-    }(NowElements.BaseElement));
+        }
+    }
     NowElements.NowContext = NowContext;
 })(NowElements || (NowElements = {}));
 customElements.define(NowElements.NowContext.is, NowElements.NowContext);

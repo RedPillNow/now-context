@@ -6,6 +6,9 @@
 			:host {
 				display: block;
 				box-sizing: border-box;
+				font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+				font-size: 14px;
+				line-height: 1.5;
 			}
 			paper-item:first-child {
 				margin-top: 10px;
@@ -28,9 +31,14 @@
 				font-weight: 600;
 			}
 		</style>
-		<button id="getNextButton">Get Next</button>
-		<button id="getSameButton">Get Same Record Again</button>
-		<button id="getPosts">Get Posts</button>
+		<button id="getNextButton" on-click="getNext">Get Next</button>
+		<button id="getSameButton" on-click="getSame" disabled$="{{getSameDisabled}}">Get Same Record Again</button>
+		<button id="getPosts" on-click="getPosts">Get Posts</button>
+		<button id="clearContext" on-click="clearDisplay">Clear Display</button>
+		<div>
+			<p>In order to access the context there is a global variable called "NowContext.context". This will be the context object which contains all the responses (that were different).</p>
+			<p>If an item does not have an id (for example the response was an array) then the url will be the key, otherwise the id is the key.</p>
+			<p>Open the console to see relevant messages</p>
 		<div id="contextDisplay">
 			<template is="dom-repeat" items="{{contextDisplay}}" as="contextItem">
 				<paper-item>
@@ -69,6 +77,11 @@ class NowContextTest extends Polymer.Element {
 				type: String,
 				notify: true,
 				value: []
+			},
+			getSameDisabled: {
+				type: Boolean,
+				value: true,
+				computed: '_isGetSameDisabled(count)'
 			}
 		};
 	}
@@ -83,12 +96,12 @@ class NowContextTest extends Polymer.Element {
 		super();
 	}
 
-	attached() {
-
+	_isGetSameDisabled(count) {
+		return !(count > 0);
 	}
 
 	onContextChange(newContext) {
-		console.log(this.is, 'onContextChange', arguments);
+		// console.log(NowContextTest.is, 'onContextChange', arguments);
 		let path = newContext.path;
 		let changedItem = this.get(path);
 		if (!changedItem && path && path.indexOf('*') > -1) {
@@ -108,110 +121,41 @@ class NowContextTest extends Polymer.Element {
 
 	getNext(evt, detail) {
 		this.count++;
-		this._fireEvent(this.count);
+		let url = 'https://jsonplaceholder.typicode.com/posts/' + this.count;
+		this._fireEvent(url, 'id', this.count);
 	}
 
 	getSame(evt, detail) {
-		this._fireEvent(this.count);
+		if (this.count > 0) {
+			let url = 'https://jsonplaceholder.typicode.com/posts/' + this.count;
+			this._fireEvent(url, 'id', this.count);
+		}
 	}
 
 	getPosts(evt, detail) {
 		let url = 'https://jsonplaceholder.typicode.com/posts';
-		let detailObj = {
-			ajax: {
-				url: url,
-				idKey: 'id'
-			}
-		};
-		this.fire('iron-signal', {name: 'nowcontextget', data: detailObj});
+		this._fireEvent(url, null, url);
 	}
 
-	_fireEvent(count) {
-		let url = 'https://jsonplaceholder.typicode.com/posts/' + count;
+	_fireEvent(url, idKey, contextKey) {
 		let detailObj = {
 			ajax: {
 				url: url,
-				idKey: 'id'
+				idKey: idKey
 			}
 		};
-		this.fire('iron-signal', {name: 'nowcontextget', data: detailObj});
+		if (this.context.hasOwnProperty(contextKey)) {
+			console.warn(NowContextTest.is, 'We will do the request, however the display will not be updated because we already have the requested item in the context', this.context[contextKey]);
+		}
+		let evt = new CustomEvent('nowcontextget', {detail: detailObj, bubbles: true, composed: true});
+		window.dispatchEvent(evt);
+	}
+
+	clearDisplay(evt) {
+		this.set('contextDisplay', []);
+		this.set('count', 0);
 	}
 }
 customElements.define(NowContextTest.is, NowContextTest);
-/* Polymer({
-	is: 'now-context-test',
-	properties: {
-		context: {
-			type: Object,
-			notify: true
-		},
-		count: {
-			type: Number,
-			value: 0
-		},
-		contextDisplay: {
-			type: String,
-			notify: true,
-			value: []
-		}
-	},
-	attached() {
-		this.getNext();
-	},
-	listeners: {
-		'getNextButton.click': 'getNext',
-		'getSameButton.click': 'getSame',
-		'getPosts.click': 'getPosts'
-	},
-	observers: [
-		'onContextChange(context.*)'
-	],
-	onContextChange(newContext) {
-		console.log(this.is, 'onContextChange', arguments);
-		let path = newContext.path;
-		let changedItem = this.get(path);
-		if (!changedItem && path && path.indexOf('*') > -1) {
-			changedItem = newContext.value;
-		}
-		if (changedItem && Object.keys(changedItem).length > 0) {
-			let isArray = Array.isArray(changedItem.model);
-			let contextDispItem = {
-				id: isArray ? changedItem.lastAjaxRequest.requestUrl : changedItem[changedItem.idKey],
-				idKey: changedItem.idKey,
-				url: changedItem.lastAjaxRequest.requestUrl,
-				title: isArray ? 'Array (' + changedItem.model.length + ')' : changedItem.model['title']
-			};
-			this.push('contextDisplay', contextDispItem);
-		}
-	},
-	getNext(evt, detail) {
-		this.count++;
-		this._fireEvent(this.count);
-	},
-	getSame(evt, detail) {
-		this._fireEvent(this.count);
-	},
-	getPosts(evt, detail) {
-		let url = 'https://jsonplaceholder.typicode.com/posts';
-		let detailObj = {
-			ajax: {
-				url: url,
-				idKey: 'id'
-			}
-		};
-		this.fire('iron-signal', {name: 'nowcontextget', data: detailObj});
-	},
-	_fireEvent(count) {
-		let url = 'https://jsonplaceholder.typicode.com/posts/' + count;
-		let detailObj = {
-			ajax: {
-				url: url,
-				idKey: 'id'
-			}
-		};
-		this.fire('iron-signal', {name: 'nowcontextget', data: detailObj});
-	}
-});*/
-
 	</script>
 </dom-module>

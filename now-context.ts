@@ -139,7 +139,7 @@ namespace NowElements {
 	 *
 	 * @author Keith Strickland <keith@redpillnow.com>
 	 */
-	export class NowContext extends Polymer.Element {
+	export class NowContext extends NowElements.BaseElement {
 		static get is() { return 'now-context' }
 
 		static get properties() {
@@ -152,16 +152,38 @@ namespace NowElements {
 			}
 		}
 
-		attached() {
-			// Create a global for interacting with this element
-			window['NowContext'] = this;
-			document.addEventListener('nowcontextget', this.onGetRequest);
-			document.addEventListener('nowcontextput', this.onPutRequest);
-			document.addEventListener('nowcontextpost', this.onPostRequest);
-			document.addEventListener('nowcontextdelete', this.onDeleteRequest);
-			document.addEventListener('nowcontextpatch', this.onPatchRequest);
-			document.addEventListener('nowcontextreqres', this._onRequestResponse);
+		constructor() {
+			super();
+			(<any>this).getListener = this._onGetRequest.bind(this);
+			(<any>this).putListener = this._onPutRequest.bind(this);
+			(<any>this).postListener = this._onPostRequest.bind(this);
+			(<any>this).deleteListener = this._onDeleteRequest.bind(this);
+			(<any>this).patchListener = this._onPatchRequest.bind(this);
+			(<any>this).requestResponseListener = this._onRequestResponse.bind(this);
 		}
+
+		connectedCallback() {
+			// Create a global for interacting with this element
+			super.connectedCallback();
+			window['NowContext'] = this;
+			window.addEventListener('nowcontextget', (<any>this).getListener);
+			window.addEventListener('nowcontextput', (<any>this).putListener);
+			window.addEventListener('nowcontextpost', (<any>this).postListener);
+			window.addEventListener('nowcontextdelete', (<any>this).deleteListener);
+			window.addEventListener('nowcontextpatch', (<any>this).patchListener);
+			window.addEventListener('nowcontextreqres', (<any>this).requestResponseListener);
+		}
+
+		disconnectedCallback() {
+			super.disconnectedCallback();
+			window.removeEventListener('nowcontextget', (<any>this).getListener);
+			window.removeEventListener('nowcontextput', (<any>this).putListener);
+			window.removeEventListener('nowcontextpost', (<any>this).postListener);
+			window.removeEventListener('nowcontextdelete', (<any>this).deleteListener);
+			window.removeEventListener('nowcontextpatch', (<any>this).patchListener);
+			window.removeEventListener('nowcontextreqres', (<any>this).requestResponseListener);
+		}
+
 		/**
 		 * Perform a GET request and return the promise
 		 * @param {CustomEvent} evt
@@ -178,9 +200,9 @@ namespace NowElements {
 		 * @listens iron-signal-nowcontextget
 		 * @returns {Promise}
 		 */
-		onGetRequest(evt: CustomEvent) {
+		private _onGetRequest(evt: CustomEvent) {
+			// console.log(NowContext.is, 'onGetRequest', arguments);
 			let detail = evt.detail;
-			// console.log(NowContext.is, 'onGetRequest, detail=', detail);
 			if (detail) {
 				let ajax: any = this.$.getAjax;
 				ajax.params = detail.ajax.parameters;
@@ -189,7 +211,7 @@ namespace NowElements {
 				ajax.contentType = detail.ajax.contentType || 'application/json';
 				return ajax.generateRequest().completes
 					.then((ironRequest) => {
-                        return this.updateContext(ironRequest, ajax, detail);
+                        return this._updateContext(ironRequest, ajax, detail);
 					})
 					.catch((err) => {
 						throw new Error(NowContext.is + '.onGetRequest failed');
@@ -214,7 +236,7 @@ namespace NowElements {
 		 * @listens iron-signal-nowcontextput
 		 * @returns {Promise}
 		 */
-		onPutRequest(evt: CustomEvent) {
+		private _onPutRequest(evt: CustomEvent) {
 			let detail = evt.detail;
 			if (detail) {
 				let ajax: any = this.$.putAjax;
@@ -223,7 +245,13 @@ namespace NowElements {
 				ajax.url = detail.ajax.url
 				ajax.contentType = detail.ajax.contentType || 'application/json';
 				ajax.body = detail.ajax.payload;
-				return ajax.generateRequest().completes;
+				return ajax.generateRequest().completes
+					.then((ironRequest) => {
+						return this._updateContext(ironRequest, ajax, detail);
+					})
+					.catch((err) => {
+						throw new Error(NowContext.is + '.onPutRequest failed');
+					});
 			}else {
 				throw new Error(NowContext.is + ',nowcontextput: No detail provided in signal');
 			}
@@ -244,7 +272,7 @@ namespace NowElements {
 		 * @listens iron-signal-nowcontextpost
 		 * @returns {Promise}
 		 */
-		onPostRequest(evt: CustomEvent) {
+		private _onPostRequest(evt: CustomEvent) {
 			let detail = evt.detail;
 			if (detail) {
 				let ajax: any = this.$.postAjax;
@@ -253,7 +281,13 @@ namespace NowElements {
 				ajax.url = detail.ajax.url
 				ajax.contentType = detail.ajax.contentType || 'application/json';
 				ajax.body = detail.ajax.payload;
-				return ajax.generateRequest().completes;
+				return ajax.generateRequest().completes
+					.then((ironRequest) => {
+						return this._updateContext(ironRequest, ajax, detail);
+					})
+					.catch((err) => {
+						throw new Error(NowContext.is + '.onPutRequest failed');
+					});
 			}else {
 				throw new Error(NowContext.is + ',nowcontextpost: No detail provided in signal');
 			}
@@ -274,7 +308,7 @@ namespace NowElements {
 		 * @listens iron-signal-nowcontextdelete
 		 * @returns {Promise}
 		 */
-		onDeleteRequest(evt: CustomEvent) {
+		private _onDeleteRequest(evt: CustomEvent) {
 			let detail = evt.detail;
 			if (detail) {
 				let ajax: any = this.$.deleteAjax;
@@ -303,7 +337,7 @@ namespace NowElements {
 		 * @listens iron-signal-nowcontextpatch
 		 * @returns {Promise}
 		 */
-		onPatchRequest(evt: CustomEvent) {
+		private _onPatchRequest(evt: CustomEvent) {
 			let detail = evt.detail;
 			if (detail) {
 				let ajax: any = this.$.patchAjax;
@@ -312,7 +346,13 @@ namespace NowElements {
 				ajax.url = detail.ajax.url
 				ajax.contentType = detail.ajax.contentType || 'application/json';
 				ajax.body = detail.ajax.payload;
-				return ajax.generateRequest().completes;
+				return ajax.generateRequest().completes
+					.then((ironRequest) => {
+						return this._updateContext(ironRequest, ajax, detail);
+					})
+					.catch((err) => {
+						throw new Error(NowContext.is + '.onPutRequest failed');
+					});
 			}else {
 				throw new Error(NowContext.is + ',nowcontextpatch: No detail provided in signal');
 			}
@@ -323,7 +363,7 @@ namespace NowElements {
 		 * @param {any} ajax
 		 * @returns {Now.AjaxRequest}
 		 */
-		getAjaxRequest(ironRequest, ajax): Now.AjaxRequest {
+		private _getAjaxRequest(ironRequest, ajax): Now.AjaxRequest {
 			if (ironRequest && ajax) {
 				let ajaxReq = new Now.AjaxRequest();
 				ajaxReq.response = ironRequest.response;
@@ -345,7 +385,7 @@ namespace NowElements {
 		 * @param {Now.AjaxRequest} ajaxRequest
 		 * @returns {Now.ContextItem}
 		 */
-		getContextItem(ironRequest, ajaxRequest: Now.AjaxRequest, idKey: string): Now.ContextItem {
+		private _createContextItem(ironRequest, ajaxRequest: Now.AjaxRequest, idKey: string): Now.ContextItem {
 			if (ironRequest && ajaxRequest) {
 				let contextItem = new Now.ContextItem();
 				contextItem.idKey = idKey;
@@ -372,13 +412,13 @@ namespace NowElements {
 		 * @property {any} detail.context.model
 		 * @returns {boolean}
 		 */
-		private updateContext(ironRequest: any, ajax: any, detail: any) {
+		private _updateContext(ironRequest: any, ajax: any, detail: any) {
 			try {
 				let response = ironRequest.response;
 				if (response) {
-					let ajaxReq = this.getAjaxRequest(ironRequest, ajax);
-					let contextItem = this.getContextItem(ironRequest, ajaxReq, detail.ajax.idKey);
-					let contextItemKey = this.getContextKey(ajaxReq, contextItem);
+					let ajaxReq = this._getAjaxRequest(ironRequest, ajax);
+					let contextItem = this._createContextItem(ironRequest, ajaxReq, detail.ajax.idKey);
+					let contextItemKey = this._getContextKey(ajaxReq, contextItem);
 					let isUrl = false;
 					if ((contextItemKey && contextItemKey.indexOf) && (contextItemKey.indexOf('http:') > -1 || contextItemKey.indexOf('https:') > -1)) {
 						isUrl = true;
@@ -408,7 +448,7 @@ namespace NowElements {
 		 * @param {Now.ContextItem} contextItem
 		 * @returns {string}
 		 */
-		private getContextKey(ajaxReq: Now.AjaxRequest, contextItem: Now.ContextItem) {
+		private _getContextKey(ajaxReq: Now.AjaxRequest, contextItem: Now.ContextItem) {
 			let contextItemKey = null;
             if (Array.isArray(ajaxReq.response)) {
                 contextItemKey = ajaxReq.requestUrl;
