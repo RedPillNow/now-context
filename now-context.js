@@ -131,6 +131,24 @@ var Now;
         }
     }
     Now.PubSubListener = PubSubListener;
+    class PubSubEvent {
+        constructor(eventName) {
+            this.eventName = eventName;
+        }
+        get eventName() {
+            return this._eventName;
+        }
+        set eventName(eventName) {
+            this._eventName = eventName;
+        }
+        get listeners() {
+            return this._listeners || [];
+        }
+        set listeners(listeners) {
+            this._listeners = listeners || [];
+        }
+    }
+    Now.PubSubEvent = PubSubEvent;
     class PubSub {
         constructor() {
             this._events = {};
@@ -141,24 +159,27 @@ var Now;
         set events(events) {
             this._events = events || {};
         }
-        get triggeredEvts() {
-            return this._triggeredEvts || [];
+        get history() {
+            return this._history || [];
         }
-        set triggeredEvts(triggeredEvts) {
-            this._triggeredEvts = triggeredEvts || [];
+        set history(history) {
+            this._history = history || [];
         }
         on(eventName, fn, context) {
-            if (!this.listenerExists(eventName, context)) {
+            if (!this._listenerExists(eventName, context)) {
                 let listener = new PubSubListener(eventName, fn, context);
-                this.events[eventName] = this.events[eventName] || [];
-                this.events[eventName].push(listener);
+                this.events[eventName] = this.events[eventName] || new Now.PubSubEvent(eventName);
+                let listeners = this.events[eventName].listeners;
+                listeners.push(listener);
+                this.events[eventName].listeners = listeners;
             }
         }
         off(eventName, fn) {
             if (this.events[eventName]) {
-                for (let i = 0; i < this.events[eventName].length; i++) {
-                    if (this.events[eventName][i].handler === fn) {
-                        this.events[eventName].splice(i, 1);
+                for (let i = 0; i < this.events[eventName].listeners.length; i++) {
+                    let listener = this.events[eventName].listeners[i];
+                    if (listener.handler === fn) {
+                        this.events[eventName].listeners.splice(i, 1);
                         break;
                     }
                 }
@@ -167,7 +188,7 @@ var Now;
         trigger(eventName, data) {
             let count = 0;
             if (this.events[eventName]) {
-                this.events[eventName].forEach((listener) => {
+                this.events[eventName].listeners.forEach((listener) => {
                     if (listener.context && listener.handler && listener.handler.call) {
                         count++;
                         listener.handler.call(listener.context, data);
@@ -183,20 +204,20 @@ var Now;
                     }
                 });
             }
-            let dispatchedEvts = this.triggeredEvts;
+            let dispatchedEvts = this.history;
             let evtObj = {
                 time: new Date(),
                 eventName: eventName,
                 listenerCount: count
             };
             dispatchedEvts.push(evtObj);
-            this.triggeredEvts = dispatchedEvts;
+            this.history = dispatchedEvts;
         }
-        listenerExists(eventName, context) {
+        _listenerExists(eventName, context) {
             if (eventName && context) {
                 let event = this.events[eventName];
                 if (event) {
-                    let found = event.filter((item, idx, arr) => {
+                    let found = event.listeners.filter((item, idx, arr) => {
                         return item.context === context;
                     });
                     return found && found.length > 0;

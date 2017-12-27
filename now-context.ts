@@ -179,9 +179,34 @@ namespace Now {
 		}
 	}
 
+	export class PubSubEvent {
+		private _eventName: string;
+		private _listeners: PubSubListener[];
+
+		constructor(eventName?) {
+			this.eventName = eventName;
+		}
+
+		get eventName() {
+			return this._eventName;
+		}
+
+		set eventName(eventName) {
+			this._eventName = eventName;
+		}
+
+		get listeners() {
+			return this._listeners || [];
+		}
+
+		set listeners(listeners) {
+			this._listeners = listeners || [];
+		}
+	}
+
 	export class PubSub {
 		private _events: any;
-		private _triggeredEvts: any[];
+		private _history: any[];
 
 		constructor() {
 			this._events = {};
@@ -195,37 +220,54 @@ namespace Now {
 			this._events = events || {};
 		}
 
-		get triggeredEvts() {
-			return this._triggeredEvts || [];
+		get history() {
+			return this._history || [];
 		}
 
-		set triggeredEvts(triggeredEvts) {
-			this._triggeredEvts = triggeredEvts || [];
+		set history(history) {
+			this._history = history || [];
 		}
-
-		on(eventName, fn, context) {
-			if (!this.listenerExists(eventName, context)) {
+		/**
+		 * Subscribe a listener to an event
+		 * @param {any} eventName
+		 * @param {function} fn The callback to run
+		 * @param {any} context The context in which to run the callback
+		 */
+		on(eventName, fn, context): void {
+			if (!this._listenerExists(eventName, context)) {
 				let listener = new PubSubListener(eventName, fn, context);
-				this.events[eventName] = this.events[eventName] || [];
-				this.events[eventName].push(listener);
+				this.events[eventName] = this.events[eventName] || new Now.PubSubEvent(eventName);
+				let listeners = this.events[eventName].listeners;
+				listeners.push(listener);
+				this.events[eventName].listeners = listeners;
 			}
 		}
-
-		off(eventName, fn) {
+		/**
+		 * Unsubscribe a listener from an event
+		 *
+		 * @param {any} eventName
+		 * @param {function} fn
+		 */
+		off(eventName, fn): void {
 			if (this.events[eventName]) {
-				for (let i = 0; i < this.events[eventName].length; i++) {
-					if (this.events[eventName][i].handler === fn) {
-						this.events[eventName].splice(i, 1);
+				for (let i = 0; i < this.events[eventName].listeners.length; i++) {
+					let listener: Now.PubSubListener = this.events[eventName].listeners[i];
+					if (listener.handler === fn) {
+						this.events[eventName].listeners.splice(i, 1);
 						break;
 					}
 				}
 			}
 		}
-
-		trigger(eventName, data) {
+		/**
+		 * Trigger an event
+		 * @param {any} eventName
+		 * @param {any} data
+		 */
+		trigger(eventName, data): void {
 			let count = 0;
 			if (this.events[eventName]) {
-				this.events[eventName].forEach((listener: PubSubListener) => {
+				this.events[eventName].listeners.forEach((listener: PubSubListener) => {
 					if (listener.context && listener.handler && listener.handler.call) {
 						count++;
 						listener.handler.call(listener.context, data);
@@ -239,21 +281,27 @@ namespace Now {
 					}
 				});
 			}
-			let dispatchedEvts = this.triggeredEvts;
+			let dispatchedEvts = this.history;
 			let evtObj = {
 				time: new Date(),
 				eventName: eventName,
 				listenerCount: count
 			}
 			dispatchedEvts.push(evtObj);
-			this.triggeredEvts = dispatchedEvts;
+			this.history = dispatchedEvts;
 		}
-
-		listenerExists(eventName, context) {
+		/**
+		 * Determine if a listener already exists for a particular event. We can only
+		 * really identify if a listener exists if a context is provided
+		 * @param {string} eventName
+		 * @param {any} context
+		 * @returns {boolean}
+		 */
+		private _listenerExists(eventName: string, context: any): boolean {
 			if (eventName && context) {
-				let event = this.events[eventName];
+				let event: Now.PubSubEvent = this.events[eventName];
 				if (event) {
-					let found = event.filter((item, idx, arr) => {
+					let found = event.listeners.filter((item, idx, arr) => {
 						return item.context === context;
 					});
 					return found && found.length > 0;
@@ -267,7 +315,9 @@ namespace Now {
 namespace NowElements {
 
 	/**
-	 * Manage the context of an application. All XHR requests should pass through this element
+	 * Manage the context of an application. All XHR requests should pass through this element and it
+	 * will keep track of all requests and store them in the context object. This element also provides
+	 * a very simple PubSub system.
 	 *
 	 * @author Keith Strickland <keith@redpillnow.com>
 	 */
@@ -314,7 +364,6 @@ namespace NowElements {
 			window.removeEventListener('nowcontextdelete', (<any>this).deleteListener);
 			window.removeEventListener('nowcontextpatch', (<any>this).patchListener);
 		}
-
 		/**
 		 * Perform a GET request and return the promise
 		 * @param {CustomEvent} evt
