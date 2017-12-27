@@ -56,7 +56,7 @@ CustomApp extends Polymer.Element {
 
 	getData() {
 		let detailObj = {
-			url: 'https://somehost.com/api/path,
+			url: 'https://somehost.com/api/path',
 			idKey: 'id'
 		};
 		let evt = new CustomEvent('nowcontextget', {detail: detailObj, bubbles: true});
