@@ -76,6 +76,35 @@ CustomApp extends Polymer.Element {
 </dom-module>
 ```
 
+## Events to dispatch
+
+There are several events that now-context listens for in order to perform requests. In theory we could just use the PubSub system for these events instead of an actual event. But the current events are:
+* `window.nowcontextget` - Perform a GET request, triggers nowContextGetReqDone PubSub Event
+* `window.nowcontextput` - Perform a PUT request, triggers nowContextPutReqDone PubSub Event
+* `window.nowcontextpost` - Perform a POST request, triggers nowContextPostReqDone PubSub Event
+* `window.nowcontextdelete` - Perform a DELETE request, triggers nowContextDeleteReqDone PubSub Event
+* `window.nowcontextpatch` - Perform a PATCH request, triggers nowContextPatchReqDone PubSub Event
+
+All of the above events should be sent a detail object formatted like:
+
+```js
+let detailObj {
+	context: {
+		element: this, // The element that fired this event (future use)
+		model: someData // The model for this element (future use)
+	},
+	ajax: { // If any special iron-ajax properties should be set, include them here
+		idKey: 'id', // The key for the ID. If using the Red Pill Now Graph API, it would be '@id'
+		url: 'http://somehost.com/api/path?id=foo', // URL for the request
+		payload: {some: obj} // If performing a PUT, POST or PATCH include the payload
+	}
+}
+```
+
+Once the context is updated with a new item, or an existing item is updated a new PubSub event will be triggered:
+* Context Item is updated - nowContextItemUpdated
+* Context Item is added - nowContextItemAdded
+
 ## PubSub System
 
 There are 2 methods to work with the PubSub system:
