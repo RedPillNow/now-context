@@ -166,12 +166,15 @@ var Now;
             this._history = history || [];
         }
         on(eventName, fn, context) {
-            if (!this._listenerExists(eventName, context)) {
+            if (!this._listenerExists(eventName, fn, context)) {
                 let listener = new PubSubListener(eventName, fn, context);
                 this.events[eventName] = this.events[eventName] || new Now.PubSubEvent(eventName);
                 let listeners = this.events[eventName].listeners;
                 listeners.push(listener);
                 this.events[eventName].listeners = listeners;
+            }
+            else {
+                console.warn('Listener for ' + eventName + ' with callback ', fn, ' already exists!');
             }
         }
         off(eventName, fn) {
@@ -186,16 +189,16 @@ var Now;
             }
         }
         trigger(eventName, data) {
-            let count = 0;
+            let listeners = [];
             if (this.events[eventName]) {
                 this.events[eventName].listeners.forEach((listener) => {
                     if (listener.context && listener.handler && listener.handler.call) {
-                        count++;
+                        listeners.push(listener);
                         listener.handler.call(listener.context, data);
                     }
                     else {
                         if (listener.handler && typeof listener.handler === 'function') {
-                            count++;
+                            listeners.push(listener);
                             listener.handler(data);
                         }
                         else {
@@ -204,26 +207,29 @@ var Now;
                     }
                 });
             }
-            let dispatchedEvts = this.history;
-            let evtObj = {
-                time: new Date(),
-                eventName: eventName,
-                listenerCount: count
-            };
-            dispatchedEvts.push(evtObj);
-            this.history = dispatchedEvts;
+            this._updateHistory(eventName, listeners);
         }
-        _listenerExists(eventName, context) {
+        _listenerExists(eventName, fn, context) {
             if (eventName && context) {
                 let event = this.events[eventName];
                 if (event) {
                     let found = event.listeners.filter((item, idx, arr) => {
-                        return item.context === context;
+                        return item.context === context && item.handler === fn && item.eventName === eventName;
                     });
                     return found && found.length > 0;
                 }
             }
             return false;
+        }
+        _updateHistory(eventName, listeners) {
+            let dispatchedEvts = this.history;
+            let evtObj = {
+                time: new Date(),
+                eventName: eventName,
+                listeners: listeners
+            };
+            dispatchedEvts.push(evtObj);
+            this.history = dispatchedEvts;
         }
     }
     Now.PubSub = PubSub;
@@ -234,11 +240,6 @@ var NowElements;
         constructor() {
             super();
             this.pubsub = new Now.PubSub();
-            this.getListener = this._onGetRequest.bind(this);
-            this.putListener = this._onPutRequest.bind(this);
-            this.postListener = this._onPostRequest.bind(this);
-            this.deleteListener = this._onDeleteRequest.bind(this);
-            this.patchListener = this._onPatchRequest.bind(this);
         }
         static get is() { return 'now-context'; }
         static get properties() {
@@ -254,22 +255,16 @@ var NowElements;
         connectedCallback() {
             super.connectedCallback();
             window['NowContext'] = this;
-            window.addEventListener('nowcontextget', this.getListener);
-            window.addEventListener('nowcontextput', this.putListener);
-            window.addEventListener('nowcontextpost', this.postListener);
-            window.addEventListener('nowcontextdelete', this.deleteListener);
-            window.addEventListener('nowcontextpatch', this.patchListener);
+            this.listenEvt('nowcontextget', this._onGetRequest, this);
+            this.listenEvt('nowcontextput', this._onPutRequest, this);
+            this.listenEvt('nowcontextpost', this._onPostRequest, this);
+            this.listenEvt('nowcontextdelete', this._onDeleteRequest, this);
+            this.listenEvt('nowcontextpatch', this._onPatchRequest, this);
         }
         disconnectedCallback() {
             super.disconnectedCallback();
-            window.removeEventListener('nowcontextget', this.getListener);
-            window.removeEventListener('nowcontextput', this.putListener);
-            window.removeEventListener('nowcontextpost', this.postListener);
-            window.removeEventListener('nowcontextdelete', this.deleteListener);
-            window.removeEventListener('nowcontextpatch', this.patchListener);
         }
-        _onGetRequest(evt) {
-            let detail = evt.detail;
+        _onGetRequest(detail) {
             if (detail) {
                 let ajax = this.$.getAjax;
                 ajax.params = detail.ajax.parameters;
@@ -289,8 +284,7 @@ var NowElements;
                 throw new Error(NowContext.is + ':iron-signal-nowcontextget: No detail provided in signal');
             }
         }
-        _onPutRequest(evt) {
-            let detail = evt.detail;
+        _onPutRequest(detail) {
             if (detail) {
                 let ajax = this.$.putAjax;
                 ajax.params = detail.ajax.parameters;
@@ -311,8 +305,7 @@ var NowElements;
                 throw new Error(NowContext.is + ',nowcontextput: No detail provided in signal');
             }
         }
-        _onPostRequest(evt) {
-            let detail = evt.detail;
+        _onPostRequest(detail) {
             if (detail) {
                 let ajax = this.$.postAjax;
                 ajax.params = detail.ajax.parameters;
@@ -333,8 +326,7 @@ var NowElements;
                 throw new Error(NowContext.is + ',nowcontextpost: No detail provided in signal');
             }
         }
-        _onDeleteRequest(evt) {
-            let detail = evt.detail;
+        _onDeleteRequest(detail) {
             if (detail) {
                 let ajax = this.$.deleteAjax;
                 ajax.params = detail.ajax.parameters;
@@ -347,8 +339,7 @@ var NowElements;
                 throw new Error(NowContext.is + ',nowcontextdelete: No detail provided in signal');
             }
         }
-        _onPatchRequest(evt) {
-            let detail = evt.detail;
+        _onPatchRequest(detail) {
             if (detail) {
                 let ajax = this.$.patchAjax;
                 ajax.params = detail.ajax.parameters;
@@ -454,6 +445,10 @@ var NowElements;
         listenEvt(eventName, fn, context) {
             let pubsub = this.get('pubsub');
             pubsub.on(eventName, fn, context);
+        }
+        unListenEvt(eventName, fn) {
+            let pubsub = this.get('pubsub');
+            pubsub.off(eventName, fn);
         }
     }
     NowElements.NowContext = NowContext;

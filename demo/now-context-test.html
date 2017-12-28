@@ -32,6 +32,10 @@
 			.getRequestCount {
 				font-size: 12px;
 			}
+			.note {
+				font-style: italic;
+				font-weight: 600;
+			}
 		</style>
 		<div class="layout horizontal">
 			<button on-click="getNext">Get Next</button>
@@ -40,13 +44,16 @@
 			<button id="clearContext" on-click="clearDisplay">Clear Display</button>
 			<span class="flex"></span>
 			<div class="getRequestCount">
-				<span>{{getReqCount}} GET requests have been made</span>
+				<span
+					title="The number of network requests made. Driven by the now-context PubSub system">
+					{{getReqCount}} GET requests have been made
+				</span>
 			</div>
 		</div>
 		<div>
 			<p>In order to access the context there is a global variable called "NowContext.context". This will be the context object which contains all the responses (that were different).</p>
 			<p>If an item does not have an id (for example the response was an array) then the url will be the key, otherwise the id is the key.</p>
-			<p>Open the console to see relevant messages</p>
+			<p class="note">Open the console to see relevant messages</p>
 		<div id="contextDisplay">
 			<template is="dom-repeat" items="{{contextDisplay}}" as="contextItem">
 				<paper-item>
@@ -98,12 +105,6 @@ class NowContextTest extends Polymer.Element {
 		};
 	}
 
-	static get observers() {
-		return [
-			'onContextChange(context.*)'
-		]
-	}
-
 	constructor() {
 		super();
 	}
@@ -113,6 +114,7 @@ class NowContextTest extends Polymer.Element {
 		setTimeout(() => {
 			NowContext.listenEvt('nowContextGetReqDone', this.onPubSubGetReqDone, this);
 			NowContext.listenEvt('nowContextItemUpdated', this.onPubSubContextUpdated);
+			NowContext.listenEvt('nowContextItemAdded', this.onContextItemAdded, this);
 		}, 1000);
 	}
 
@@ -120,21 +122,15 @@ class NowContextTest extends Polymer.Element {
 		return !(count > 0);
 	}
 
-	onContextChange(newContext) {
-		// console.log(NowContextTest.is, 'onContextChange', arguments);
-		let path = newContext.path;
-		let changedItem = this.get(path);
-		if (!changedItem && path && path.indexOf('*') > -1) {
-			changedItem = newContext.value;
-		}
-		if (changedItem && Object.keys(changedItem).length > 0) {
-			let isArray = Array.isArray(changedItem.model);
+	onContextItemAdded(item) {
+		if (item && Object.keys(item).length > 0) {
+			let isArray = Array.isArray(item.model);
 			let contextDispItem = {
-				id: isArray ? changedItem.lastAjaxRequest.requestUrl : changedItem[changedItem.idKey],
-				idKey: changedItem.idKey,
-				url: changedItem.lastAjaxRequest.requestUrl,
-				title: isArray ? 'Array (' + changedItem.model.length + ')' : changedItem.model['title']
-			};
+				id: isArray ? item.lastAjaxRequest.requestUrl : item[item.idKey],
+				idKey: item.idKey,
+				url: item.lastAjaxRequest.requestUrl,
+				title: isArray ? 'Array (' + item.model.length + ')' : item.model['title']
+			}
 			this.push('contextDisplay', contextDispItem);
 		}
 	}
@@ -167,8 +163,9 @@ class NowContextTest extends Polymer.Element {
 		if (this.context.hasOwnProperty(contextKey)) {
 			console.warn(NowContextTest.is, 'We will do the request, however the display will not be updated because we already have the requested item in the context', this.context[contextKey]);
 		}
-		let evt = new CustomEvent('nowcontextget', {detail: detailObj, bubbles: true, composed: true});
-		window.dispatchEvent(evt);
+		NowContext.triggerEvt('nowcontextget', detailObj);
+		/* let evt = new CustomEvent('nowcontextget', {detail: detailObj, bubbles: true, composed: true});
+		window.dispatchEvent(evt); */
 	}
 
 	clearDisplay(evt) {
@@ -178,7 +175,7 @@ class NowContextTest extends Polymer.Element {
 
 	onPubSubGetReqDone(data) {
 		this.getReqCount++;
-		console.log(NowContextTest.is, 'onPubSubGetReqDone, This is the handler for the nowContextGetReqDone pubsub event', data, 'Handler context=', this);
+		// console.log(NowContextTest.is, 'onPubSubGetReqDone, This is the handler for the nowContextGetReqDone pubsub event', data, 'Handler context=', this);
 	}
 
 	onPubSubContextUpdated(data) {

@@ -6,28 +6,6 @@ trigger a PubSub event.
 
 This element is not meant to be used as or replace a cache. Modern browsers now offer a very good caching system.
 
-## Setup
-
-First, make sure you have [Nodejs](https://nodejsorg/) installed, so we can use the Node package manager (NPM)
-Next, install the other key tools:
-
-* [Bower](http://bowerio/) - dependency management
-* [Gulp](http://gulpjscom/) - build
-* [TypeScript](http://wwwtypescriptlangorg/) - TypeScript compiler
-* [web-component-tester](https://githubcom/Polymer/web-component-tester) - (wct) - testing
-
-You can install them with these commands:
-
-`[sudo] npm install --global gulp bower typescript web-component-tester`
-
-Next, install dependencies that are managed by NPM:
-
-`[sudo] npm install`
-
-Install dependencies that are managed by Bower:
-
-`bower install`
-
 ## Using this element
 
 Place this element in the shell of your application. This will provide a global variable named `NowContext`. You can use data binding to share the context (though not recommended). Instead use the PubSub system to listen for and trigger events.
@@ -56,11 +34,12 @@ CustomApp extends Polymer.Element {
 
 	getData() {
 		let detailObj = {
-			url: 'https://somehost.com/api/path',
-			idKey: 'id'
+			ajax: {
+				url: 'https://somehost.com/api/path',
+				idKey: 'id'
+			}
 		};
-		let evt = new CustomEvent('nowcontextget', {detail: detailObj, bubbles: true});
-		window.dispatchEvent(evt);
+		NowContext.triggerEvt('nowcontextget', detailObj);
 	}
 
 	onGetReqDone(data) {
@@ -76,14 +55,14 @@ CustomApp extends Polymer.Element {
 </dom-module>
 ```
 
-## Events to dispatch
+## Events Listened For
 
-There are several events that now-context listens for in order to perform requests. In theory we could just use the PubSub system for these events instead of an actual event. But the current events are:
-* `window.nowcontextget` - Perform a GET request, triggers nowContextGetReqDone PubSub Event
-* `window.nowcontextput` - Perform a PUT request, triggers nowContextPutReqDone PubSub Event
-* `window.nowcontextpost` - Perform a POST request, triggers nowContextPostReqDone PubSub Event
-* `window.nowcontextdelete` - Perform a DELETE request, triggers nowContextDeleteReqDone PubSub Event
-* `window.nowcontextpatch` - Perform a PATCH request, triggers nowContextPatchReqDone PubSub Event
+There are several PubSub events that now-context listens for in order to perform requests. The current events are:
+* `nowcontextget` - Perform a GET request, triggers nowContextGetReqDone PubSub Event
+* `nowcontextput` - Perform a PUT request, triggers nowContextPutReqDone PubSub Event
+* `nowcontextpost` - Perform a POST request, triggers nowContextPostReqDone PubSub Event
+* `nowcontextdelete` - Perform a DELETE request, triggers nowContextDeleteReqDone PubSub Event
+* `nowcontextpatch` - Perform a PATCH request, triggers nowContextPatchReqDone PubSub Event
 
 All of the above events should be sent a detail object formatted like:
 
@@ -107,12 +86,35 @@ Once the context is updated with a new item, or an existing item is updated a ne
 
 ## PubSub System
 
-There are 2 methods to work with the PubSub system:
+There are 3 methods to work with the PubSub system:
 
 * `NowContext.listenEvt(eventName, callback, context)` - This is how you subscribe to an event
 * `NowContext.triggerEvt(eventName, data)` - This is how you trigger an event
+* `NowContext.unListenEvt(eventName, callback)` - This is how you un-subscribe from an event
 
 When an event is triggered, it will run the callback function for all subscribed listeners. While we attempt to prevent duplicate listeners, if a context is not provided to `listenEvt` it is possible to end up with duplicate listeners. While this will not cause a memory leak it will cause your callback to be called twice. Also the running of callbacks does not guarantee a particular order.
+
+## Setup for Development
+
+First, make sure you have [Nodejs](https://nodejs.org/) installed, so we can use the Node package manager (NPM)
+Next, install the other key tools:
+
+* [Bower](http://bower.io/) - dependency management
+* [Gulp](http://gulpjs.com/) - build
+* [TypeScript](http://www.typescriptlang.org/) - TypeScript compiler
+* [web-component-tester](https://github.com/Polymer/web-component-tester) - (wct) - testing
+
+You can install them with these commands:
+
+`[sudo] npm install --global gulp bower typescript web-component-tester`
+
+Next, install dependencies that are managed by NPM:
+
+`[sudo] npm install`
+
+Install dependencies that are managed by Bower:
+
+`bower install`
 
 ## Running Element in dev environment
 

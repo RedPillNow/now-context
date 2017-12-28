@@ -234,12 +234,14 @@ namespace Now {
 		 * @param {any} context The context in which to run the callback
 		 */
 		on(eventName, fn, context): void {
-			if (!this._listenerExists(eventName, context)) {
+			if (!this._listenerExists(eventName, fn, context)) {
 				let listener = new PubSubListener(eventName, fn, context);
 				this.events[eventName] = this.events[eventName] || new Now.PubSubEvent(eventName);
 				let listeners = this.events[eventName].listeners;
 				listeners.push(listener);
 				this.events[eventName].listeners = listeners;
+			} else {
+				console.warn('Listener for ' + eventName + ' with callback ', fn, ' already exists!');
 			}
 		}
 		/**
@@ -251,7 +253,7 @@ namespace Now {
 		off(eventName, fn): void {
 			if (this.events[eventName]) {
 				for (let i = 0; i < this.events[eventName].listeners.length; i++) {
-					let listener: Now.PubSubListener = this.events[eventName].listeners[i];
+					let listener: PubSubListener = this.events[eventName].listeners[i];
 					if (listener.handler === fn) {
 						this.events[eventName].listeners.splice(i, 1);
 						break;
@@ -265,15 +267,15 @@ namespace Now {
 		 * @param {any} data
 		 */
 		trigger(eventName, data): void {
-			let count = 0;
+			let listeners = [];
 			if (this.events[eventName]) {
 				this.events[eventName].listeners.forEach((listener: PubSubListener) => {
 					if (listener.context && listener.handler && listener.handler.call) {
-						count++;
+						listeners.push(listener);
 						listener.handler.call(listener.context, data);
 					} else {
 						if (listener.handler && typeof listener.handler === 'function') {
-							count++;
+							listeners.push(listener);
 							listener.handler(data);
 						} else {
 							throw new Error('It appears that the ' + eventName + ' handler is not a function!');
@@ -281,33 +283,43 @@ namespace Now {
 					}
 				});
 			}
-			let dispatchedEvts = this.history;
-			let evtObj = {
-				time: new Date(),
-				eventName: eventName,
-				listenerCount: count
-			}
-			dispatchedEvts.push(evtObj);
-			this.history = dispatchedEvts;
+			this._updateHistory(eventName, listeners);
 		}
 		/**
 		 * Determine if a listener already exists for a particular event. We can only
 		 * really identify if a listener exists if a context is provided
 		 * @param {string} eventName
-		 * @param {any} context
+		 * @param {any} fn The callback function
+		 * @param {any} context The context of the listener
 		 * @returns {boolean}
 		 */
-		private _listenerExists(eventName: string, context: any): boolean {
+		private _listenerExists(eventName: string, fn: any, context: any): boolean {
 			if (eventName && context) {
 				let event: Now.PubSubEvent = this.events[eventName];
 				if (event) {
-					let found = event.listeners.filter((item, idx, arr) => {
-						return item.context === context;
+					let found = event.listeners.filter((item: PubSubListener, idx, arr) => {
+						return item.context === context && item.handler === fn && item.eventName === eventName;
 					});
 					return found && found.length > 0;
 				}
 			}
 			return false;
+		}
+		/**
+		 * Update the history object
+		 * @private
+		 * @param {any} eventName
+		 * @param {any} listeners listeners that were serviced
+		 */
+		private _updateHistory(eventName, listeners): void {
+			let dispatchedEvts = this.history;
+			let evtObj = {
+				time: new Date(),
+				eventName: eventName,
+				listeners: listeners
+			}
+			dispatchedEvts.push(evtObj);
+			this.history = dispatchedEvts;
 		}
 	}
 }
@@ -323,7 +335,6 @@ namespace NowElements {
 	 */
 	export class NowContext extends NowElements.BaseElement {
 		static get is() { return 'now-context' }
-
 		static get properties() {
 			return {
 				context: {
@@ -338,31 +349,23 @@ namespace NowElements {
 		constructor() {
 			super();
 			(<any>this).pubsub = new Now.PubSub();
-			(<any>this).getListener = this._onGetRequest.bind(this);
-			(<any>this).putListener = this._onPutRequest.bind(this);
-			(<any>this).postListener = this._onPostRequest.bind(this);
-			(<any>this).deleteListener = this._onDeleteRequest.bind(this);
-			(<any>this).patchListener = this._onPatchRequest.bind(this);
 		}
-
+		/**
+		 * Subscribe to relevant PubSub events
+		 */
 		connectedCallback() {
 			// Create a global for interacting with this element
 			super.connectedCallback();
 			window['NowContext'] = this;
-			window.addEventListener('nowcontextget', (<any>this).getListener);
-			window.addEventListener('nowcontextput', (<any>this).putListener);
-			window.addEventListener('nowcontextpost', (<any>this).postListener);
-			window.addEventListener('nowcontextdelete', (<any>this).deleteListener);
-			window.addEventListener('nowcontextpatch', (<any>this).patchListener);
+			this.listenEvt('nowcontextget', this._onGetRequest, this);
+			this.listenEvt('nowcontextput', this._onPutRequest, this);
+			this.listenEvt('nowcontextpost', this._onPostRequest, this);
+			this.listenEvt('nowcontextdelete', this._onDeleteRequest, this);
+			this.listenEvt('nowcontextpatch', this._onPatchRequest, this);
 		}
 
 		disconnectedCallback() {
 			super.disconnectedCallback();
-			window.removeEventListener('nowcontextget', (<any>this).getListener);
-			window.removeEventListener('nowcontextput', (<any>this).putListener);
-			window.removeEventListener('nowcontextpost', (<any>this).postListener);
-			window.removeEventListener('nowcontextdelete', (<any>this).deleteListener);
-			window.removeEventListener('nowcontextpatch', (<any>this).patchListener);
 		}
 		/**
 		 * Perform a GET request and return the promise
@@ -377,13 +380,12 @@ namespace NowElements {
 		 * @property {any} evt.detail.context
 		 * @property {HTMLElement} evt.detail.context.element
 		 * @property {any} evt.detail.context.model
-		 * @listens window.nowcontextget
+		 * @listens pubsub#nowcontextget
 		 * @event nowContextGetReqDone
 		 * @returns {Promise}
 		 */
-		private _onGetRequest(evt: CustomEvent) {
+		private _onGetRequest(detail: any) {
 			// console.log(NowContext.is, 'onGetRequest', arguments);
-			let detail = evt.detail;
 			if (detail) {
 				let ajax: any = this.$.getAjax;
 				ajax.params = detail.ajax.parameters;
@@ -415,12 +417,11 @@ namespace NowElements {
 		 * @property {any} evt.detail.context
 		 * @property {HTMLElement} evt.detail.context.element
 		 * @property {any} evt.detail.context.model
-		 * @listens window.nowcontextput
+		 * @listens pubsub#nowcontextput
 		 * @event nowContextPutReqDone
 		 * @returns {Promise}
 		 */
-		private _onPutRequest(evt: CustomEvent) {
-			let detail = evt.detail;
+		private _onPutRequest(detail: any) {
 			if (detail) {
 				let ajax: any = this.$.putAjax;
 				ajax.params = detail.ajax.parameters;
@@ -453,12 +454,11 @@ namespace NowElements {
 		 * @property {any} evt.detail.context
 		 * @property {HTMLElement} evt.detail.context.element
 		 * @property {any} evt.detail.context.model
-		 * @listens window.nowcontextpost
+		 * @listens pubsub#nowcontextpost
 		 * @event nowContextPostReqDone
 		 * @returns {Promise}
 		 */
-		private _onPostRequest(evt: CustomEvent) {
-			let detail = evt.detail;
+		private _onPostRequest(detail: any) {
 			if (detail) {
 				let ajax: any = this.$.postAjax;
 				ajax.params = detail.ajax.parameters;
@@ -491,11 +491,10 @@ namespace NowElements {
 		 * @property {any} evt.detail.context
 		 * @property {HTMLElement} evt.detail.context.element
 		 * @property {any} evt.detail.context.model
-		 * @listens window.nowcontextdelete
+		 * @listens pubsub#nowcontextdelete
 		 * @returns {Promise}
 		 */
-		private _onDeleteRequest(evt: CustomEvent) {
-			let detail = evt.detail;
+		private _onDeleteRequest(detail: any) {
 			if (detail) {
 				let ajax: any = this.$.deleteAjax;
 				ajax.params = detail.ajax.parameters;
@@ -520,12 +519,11 @@ namespace NowElements {
 		 * @property {any} evt.detail.context
 		 * @property {HTMLElement} evt.detail.context.element
 		 * @property {any} evt.detail.context.model
-		 * @listens window.nowcontextpatch
+		 * @listens pubsub#nowcontextpatch
 		 * @event nowContextPatchReqDone
 		 * @returns {Promise}
 		 */
-		private _onPatchRequest(evt: CustomEvent) {
-			let detail = evt.detail;
+		private _onPatchRequest(detail: any) {
 			if (detail) {
 				let ajax: any = this.$.patchAjax;
 				ajax.params = detail.ajax.parameters;
@@ -683,6 +681,15 @@ namespace NowElements {
 		listenEvt(eventName, fn, context) {
 			let pubsub: Now.PubSub = this.get('pubsub');
 			pubsub.on(eventName, fn, context);
+		}
+		/**
+		 * Un-Subscribe from an event
+		 * @param {any} eventName
+		 * @param {function} fn The callback for the event
+		 */
+		unListenEvt(eventName, fn) {
+			let pubsub: Now.PubSub = this.get('pubsub');
+			pubsub.off(eventName, fn);
 		}
 	}
 }
