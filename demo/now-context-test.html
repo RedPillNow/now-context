@@ -42,6 +42,7 @@
 			<button on-click="getSame" disabled$="{{getSameDisabled}}">Get Same Record Again</button>
 			<button on-click="getPosts">Get Posts</button>
 			<button id="clearContext" on-click="clearDisplay">Clear Display</button>
+			<button id="triggerEvt" on-click="triggerEvent">Trigger Event</button>
 			<span class="flex"></span>
 			<div class="getRequestCount">
 				<span
@@ -112,9 +113,9 @@ class NowContextTest extends Polymer.Element {
 	connectedCallback() {
 		super.connectedCallback();
 		setTimeout(() => {
-			NowContext.listenEvt('nowContextGetReqDone', this.onContextGetReqDone, this);
 			NowContext.listenEvt('nowContextItemUpdated', this.onContextItemUpdated);
 			NowContext.listenEvt('nowContextItemAdded', this.onContextItemAdded, this);
+			NowContext.listenEvt('customEvent', this.onCustomEvent, this);
 		}, 1000);
 	}
 
@@ -137,34 +138,44 @@ class NowContextTest extends Polymer.Element {
 
 	getNext(evt, detail) {
 		this.count++;
-		let url = 'https://jsonplaceholder.typicode.com/posts/' + this.count;
-		this._fireEvent(url, 'id', this.count);
+		NowContext.reqres(this.getReqResPayload())
+			.then((ajaxReq) => {
+				this.getReqCount++;
+			});
 	}
 
 	getSame(evt, detail) {
 		if (this.count > 0) {
-			let url = 'https://jsonplaceholder.typicode.com/posts/' + this.count;
-			this._fireEvent(url, 'id', this.count);
+			NowContext.reqres(this.getReqResPayload())
+				.then((ajaxReq) => {
+					this.getReqCount++;
+				});
 		}
+	}
+
+	getReqResPayload() {
+		return {
+			ajax: {
+				method: 'GET',
+				url: 'https://jsonplaceholder.typicode.com/posts/' + this.count,
+				idKey: 'id'
+			},
+			idKey: 'id'
+		};
 	}
 
 	getPosts(evt, detail) {
-		let url = 'https://jsonplaceholder.typicode.com/posts';
-		this._fireEvent(url, null, url);
-	}
-
-	_fireEvent(url, idKey, contextKey) {
-		let detailObj = {
+		let payload = {
 			ajax: {
-				url: url,
-				idKey: idKey,
-				method: 'GET'
-			}
-		};
-		if (this.context.hasOwnProperty(contextKey)) {
-			console.warn(NowContextTest.is, 'We will do the request, however the display will not be updated because we already have the requested item in the context', this.context[contextKey]);
+				method: 'GET',
+				url: 'https://jsonplaceholder.typicode.com/posts'
+			},
+			idKey: 'url'
 		}
-		NowContext.triggerEvt('nowcontextget', detailObj);
+		NowContext.reqres(payload)
+			.then((ajaxReq) => {
+				this.getReqCount++;
+			});
 	}
 
 	clearDisplay(evt) {
@@ -172,12 +183,16 @@ class NowContextTest extends Polymer.Element {
 		this.set('count', 0);
 	}
 
-	onContextGetReqDone(data) {
-		this.getReqCount++;
-	}
-
 	onContextItemUpdated(data) {
 		console.log(NowContextTest.is, 'onNowContextContextUpdated, This is the handler for the nowContextItemUpdated pubsub event', data, 'Handler context=', this);
+	}
+
+	triggerEvent(evt) {
+		NowContext.triggerEvt('customEvent');
+	}
+
+	onCustomEvent(data) {
+		alert('This is produced from the PubSub running the listener for customEvent on ' +  NowContextTest.is);
 	}
 }
 customElements.define(NowContextTest.is, NowContextTest);

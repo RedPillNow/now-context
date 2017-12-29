@@ -10,7 +10,7 @@ This element is not meant to be used as or replace a cache. Modern browsers now 
 
 Place this element in the shell of your application. This will provide a global variable named `NowContext`. You can use data binding to share the context (though not recommended). Instead use the PubSub system to listen for and trigger events.
 
-*Example*
+**Example**
 ```html
 <dom-module id="custom-app">
 	<template>
@@ -18,64 +18,62 @@ Place this element in the shell of your application. This will provide a global 
 		....
 	</template>
 	<script>
-CustomApp extends Polymer.Element {
+class CustomApp extends Polymer.Element {
 	static get is() {return 'custom-app'}
 	static get properties() {
 		return {
 			someData: Object
 		};
 	}
+	/**
+	 * Create a PubSub Event Listener
+	 */
 	connectedCallback() {
 		// Give now-context time to be initialized
 		setTimeout(() => {
-			NowContext.listenEvt('nowContextGetReqDone', this.onGetReqDone, this);
+			NowContext.listenEvt('someEvent', this.onEvt, this);
 		}, 1000);
 	}
-
-	getData() {
+	/**
+	 * Perform an ajax request
+	 */
+	putData(data) {
 		let detailObj = {
 			ajax: {
 				url: 'https://somehost.com/api/path',
-				idKey: 'id'
-			}
+				method: 'PUT',
+				payload: data
+			},
+			idKey: '@id'
 		};
-		NowContext.triggerEvt('nowcontextget', detailObj);
+		NowContext.reqres(detailObj)
+			.then((ajaxRequest) => {
+				// Do Something....
+			});
 	}
 
-	onGetReqDone(data) {
+	onEvt(data) {
 		// Do something with the data
-		this.triggerSomeRandomeEvt();
+		this.putData(data);
 	}
 
-	triggerSomeRandomEvt() {
-		NowContext.triggerEvt('someRandomEvent', this.someData);
+	triggerSomeEvt() {
+		NowContext.triggerEvt('someEvent', this.someData);
 	}
 }
 	</script>
 </dom-module>
 ```
 
-## Events Listened For
-
-There are several PubSub events that now-context listens for in order to perform requests. The current events are:
-* `nowcontextget` - Perform a GET request, triggers nowContextGetReqDone PubSub Event
-* `nowcontextput` - Perform a PUT request, triggers nowContextPutReqDone PubSub Event
-* `nowcontextpost` - Perform a POST request, triggers nowContextPostReqDone PubSub Event
-* `nowcontextdelete` - Perform a DELETE request, triggers nowContextDeleteReqDone PubSub Event
-* `nowcontextpatch` - Perform a PATCH request, triggers nowContextPatchReqDone PubSub Event
-
-All of the above events should be sent a detail object formatted like:
+All Request/Response events should be sent a detail/payload object formatted like:
 
 ```js
 let detailObj {
-	context: {
-		element: this, // The element that fired this event (future use)
-		model: someData // The model for this element (future use)
-	},
+	idKey: 'id', // The key for the ID. If using the Red Pill Now Graph API, it would be '@id'
 	ajax: { // If any special iron-ajax properties should be set, include them here
-		idKey: 'id', // The key for the ID. If using the Red Pill Now Graph API, it would be '@id'
 		url: 'http://somehost.com/api/path?id=foo', // URL for the request
 		payload: {some: obj} // If performing a PUT, POST or PATCH include the payload
+		method: 'GET'
 	}
 }
 ```
@@ -86,13 +84,14 @@ Once the context is updated with a new item, or an existing item is updated a ne
 
 ## PubSub System
 
-There are 3 methods to work with the PubSub system:
+There are 4 methods to work with the PubSub system:
 
 * `NowContext.listenEvt(eventName, callback, context)` - This is how you subscribe to an event
 * `NowContext.triggerEvt(eventName, data)` - This is how you trigger an event
 * `NowContext.unListenEvt(eventName, callback)` - This is how you un-subscribe from an event
+* `NowContext.reqres(payload)` - This is how you make an ajax request. See above for format of payload. This will return a Promise with the ajax request data included as an argument
 
-When an event is triggered, it will run the callback function for all subscribed listeners. While we attempt to prevent duplicate listeners, if a context is not provided to `listenEvt` it is possible to end up with duplicate listeners. While this will not cause a memory leak it will cause your callback to be called twice. Also the running of callbacks does not guarantee a particular order.
+When an event is triggered, it will run the callback function for all subscribed listeners. While we attempt to prevent duplicate listeners, if a context is not provided to `listenEvt` it is possible to end up with duplicate listeners. While this will not cause a memory leak it will cause your callback to be called twice. Also the order of running callbacks is not guaranteed to happen in any particular order.
 
 ## Setup for Development
 

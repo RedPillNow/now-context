@@ -138,6 +138,15 @@ var Now;
         constructor(eventName, handler, context) {
             super(eventName, handler, context);
         }
+        get id() {
+            return this._id;
+        }
+        set id(id) {
+            this._id = id;
+        }
+        set handler(handler) {
+            this._handler = handler;
+        }
         get resolve() {
             return this._resolve;
         }
@@ -261,6 +270,7 @@ var NowElements;
         constructor() {
             super();
             this.globalId = 0;
+            this.reqResListeners = {};
             this.pubsub = new Now.PubSub();
         }
         static get is() { return 'now-context'; }
@@ -277,7 +287,6 @@ var NowElements;
         connectedCallback() {
             super.connectedCallback();
             window.NowContext = this;
-            this.listenEvt('nowcontextget', this._onGetRequest, this);
             if (window.Worker) {
                 this.worker = new Worker(this.resolveUrl('now-context-worker.js'));
                 this.onWorkerMsg = this._onWorkerMsg.bind(this);
@@ -287,15 +296,6 @@ var NowElements;
         disconnectedCallback() {
             super.disconnectedCallback();
             this.worker.removeEventListener('message', this.onWorkerMsg);
-            this.unListenEvt('nowcontextget', this._onGetRequest);
-        }
-        _onGetRequest(detail) {
-            if (detail) {
-                this.worker.postMessage({ type: detail.ajax.method, detail: detail, id: this.globalId++ });
-            }
-            else {
-                throw new Error(NowContext.is + ':iron-signal-nowcontextget: No detail provided in signal');
-            }
         }
         _createContextItem(ajaxRequest, idKey) {
             if (ajaxRequest) {
@@ -311,7 +311,7 @@ var NowElements;
             try {
                 let response = ajaxReq.response;
                 if (response) {
-                    let contextItem = this._createContextItem(ajaxReq, detail.ajax.idKey);
+                    let contextItem = this._createContextItem(ajaxReq, detail.idKey);
                     let contextItemKey = this._getContextKey(ajaxReq, contextItem);
                     let isUrl = false;
                     if ((contextItemKey && contextItemKey.indexOf) && (contextItemKey.indexOf('http:') > -1 || contextItemKey.indexOf('https:') > -1)) {
@@ -370,29 +370,35 @@ var NowElements;
             let pubsub = this.get('pubsub');
             pubsub.off(eventName, fn);
         }
+        reqres(payload) {
+            return this._sendWorkerMsg(payload);
+        }
+        _sendWorkerMsg(payload) {
+            const msgId = this.globalId++;
+            let listener = new Now.ReqResListener('reqRes' + msgId, null);
+            listener.id = msgId;
+            return new Promise((resolve, reject) => {
+                listener.resolve = resolve;
+                listener.reject = reject;
+                this.reqResListeners[msgId] = listener;
+                const msg = {
+                    id: msgId,
+                    idKey: payload.idKey,
+                    ajax: payload.ajax
+                };
+                this.worker.postMessage(msg);
+            });
+        }
         _onWorkerMsg(evt) {
-            let ajaxReq = new Now.AjaxRequest(evt.data.ajax);
-            let detail = evt.data.detail;
-            switch (ajaxReq.method.toLowerCase()) {
-                case 'get':
-                    this.triggerEvt('nowContextGetReqDone', ajaxReq.response);
-                    this._updateContext(ajaxReq, detail);
-                    break;
-                case 'put':
-                    this.triggerEvt('nowContextPutReqDone', ajaxReq.response);
-                    this._updateContext(ajaxReq, detail);
-                    break;
-                case 'post':
-                    this.triggerEvt('nowContextPostReqDone', ajaxReq.response);
-                    this._updateContext(ajaxReq, detail);
-                    break;
-                case 'patch':
-                    this.triggerEvt('nowContextPostReqDone', ajaxReq.response);
-                    this._updateContext(ajaxReq, detail);
-                    break;
-                case 'delete':
-                    this.triggerEvt('nowContextDeleteReqDone', ajaxReq.response);
-                    break;
+            let data = evt.data;
+            try {
+                let ajaxReq = new Now.AjaxRequest(data.ajaxReq);
+                this._updateContext(ajaxReq, { idKey: data.idKey });
+                this.reqResListeners[data.id].resolve(ajaxReq);
+                delete this.reqResListeners[data.id];
+            }
+            catch (err) {
+                this.reqResListeners[data.id].reject(err);
             }
         }
     }

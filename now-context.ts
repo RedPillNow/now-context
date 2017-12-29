@@ -137,7 +137,7 @@ namespace Now {
 
 	export class PubSubListener {
 		private _eventName: string;
-		private _handler: any;
+		protected _handler: any;
 		private _context: any;
 
 		constructor(eventName, handler, context?) {
@@ -186,9 +186,23 @@ namespace Now {
 	export class ReqResListener extends PubSubListener {
 		private _resolve: any;
 		private _reject: any;
+		private _id: number;
+		protected _handler: any;
 
 		constructor(eventName, handler, context?) {
 			super(eventName, handler, context);
+		}
+
+		get id() {
+			return this._id;
+		}
+
+		set id(id) {
+			this._id = id;
+		}
+
+		set handler(handler) {
+			this._handler = handler;
 		}
 
 		get resolve() {
@@ -232,7 +246,11 @@ namespace Now {
 			this._listeners = listeners || [];
 		}
 	}
-
+	/**
+	 * Derived from: https://gist.github.com/learncodeacademy/777349747d8382bfb722 with modification
+	 * @export
+	 * @class PubSub
+	 */
 	export class PubSub {
 		private _events: any;
 		private _history: any[];
@@ -385,6 +403,7 @@ namespace NowElements {
 		 * @type {Worker}
 		 */
 		private worker: Worker;
+		private reqResListeners = {};
 
 		constructor() {
 			super();
@@ -397,7 +416,6 @@ namespace NowElements {
 			// Create a global for interacting with this element
 			super.connectedCallback();
 			window.NowContext = this;
-			this.listenEvt('nowcontextget', this._onGetRequest, this);
 			if (window.Worker) {
 				this.worker = new Worker(this.resolveUrl('now-context-worker.js'));
 				(<any>this).onWorkerMsg = this._onWorkerMsg.bind(this);
@@ -411,31 +429,6 @@ namespace NowElements {
 		disconnectedCallback() {
 			super.disconnectedCallback();
 			this.worker.removeEventListener('message', (<any>this).onWorkerMsg);
-			this.unListenEvt('nowcontextget', this._onGetRequest);
-		}
-		/**
-		 * Perform a GET request and return the promise
-		 * @param {CustomEvent} detail
-		 * @property {any} detail.ajax
-		 * @property {any} detail.ajax.payload
-		 * @property {any} detail.ajax.parameters
-		 * @property {string} detail.ajax.contentType
-		 * @property {string} detail.ajax.handleAs
-		 * @property {string} detail.ajax.url
-		 * @property {any} detail.context
-		 * @property {HTMLElement} detail.context.element
-		 * @property {any} detail.context.model
-		 * @listens pubsub#nowcontextget
-		 * @event nowContextGetReqDone
-		 * @returns {Promise}
-		 */
-		private _onGetRequest(detail: any) {
-			// console.log(NowContext.is, 'onGetRequest', arguments);
-			if (detail) {
-				this.worker.postMessage({ type: detail.ajax.method, detail: detail, id: this.globalId++ });
-			}else {
-				throw new Error(NowContext.is + ':iron-signal-nowcontextget: No detail provided in signal');
-			}
 		}
 		/**
 		 * Get a Now.ContextItem based on the ironRequest
@@ -476,7 +469,7 @@ namespace NowElements {
 			try {
 				let response = ajaxReq.response;
 				if (response) {
-					let contextItem = this._createContextItem(ajaxReq, detail.ajax.idKey);
+					let contextItem = this._createContextItem(ajaxReq, detail.idKey);
 					let contextItemKey = this._getContextKey(ajaxReq, contextItem);
 					let isUrl = false;
 					if ((contextItemKey && contextItemKey.indexOf) && (contextItemKey.indexOf('http:') > -1 || contextItemKey.indexOf('https:') > -1)) {
@@ -563,35 +556,69 @@ namespace NowElements {
 			pubsub.off(eventName, fn);
 		}
 		/**
-		 * Responds to the web worker postMessage event
-		 *
+		 * A request response function. This is mainly used for doing an ajax
+		 * call. Will return a promise which can then be used to do something
+		 * once the request is finished
+		 * @param {any} payload
+		 * @property {any} payload.ajax Should contain an object with all the appropriate values to do the AJAX request
+		 * @property {string} payload.ajax.method
+		 * @property {string} payload.ajax.url
+		 * @property {any} payload.ajax.payload If doing something other than a GET this is the payload to send to the server
+		 * @property {any} payload.ajax.params The url parameters
+		 * @property {string} payload.ajax.responseType
+		 * @returns {Promise}
+		 */
+		reqres(payload) {
+			return this._sendWorkerMsg(payload);
+		}
+		/**
+		 * This creates a promise and listener to pass along to the worker. It sends the payload
+		 * to the worker which then does the request.
+		 * @private
+		 * @param {any} payload
+		 * @property {string} idKey The key for the ID
+		 * @property {any} payload.ajax Should contain an object with all the appropriate values to do the AJAX request
+		 * @property {string} payload.ajax.method
+		 * @property {string} payload.ajax.url
+		 * @property {any} payload.ajax.payload If doing something other than a GET this is the payload to send to the server
+		 * @property {any} payload.ajax.params The url parameters
+		 * @property {string} payload.ajax.responseType
+		 * @returns {Promise}
+		 */
+		private _sendWorkerMsg(payload) {
+			const msgId = this.globalId++;
+			let listener: Now.ReqResListener = new Now.ReqResListener('reqRes' + msgId, null);
+			listener.id = msgId;
+			return new Promise((resolve, reject) => {
+				listener.resolve = resolve;
+				listener.reject = reject;
+				this.reqResListeners[msgId] = listener;
+				const msg = {
+					id: msgId,
+					idKey: payload.idKey,
+					ajax: payload.ajax
+				};
+				this.worker.postMessage(msg);
+			});
+		}
+		/**
+		 * Responds to the web worker postMessage event. If processing is successful resolve
+		 * the Promise from _sendWorkerMsg
 		 * @private
 		 * @param {MessageEvent} evt
+		 * @property {any} evt.data
+		 * @property {Now.AjaxRequest} evt.data.ajaxReq
+		 * @property {number} evt.data.id
 		 */
 		private _onWorkerMsg(evt: MessageEvent) {
-			let ajaxReq: Now.AjaxRequest = new Now.AjaxRequest(evt.data.ajax);
-			let detail = evt.data.detail;
-			switch (ajaxReq.method.toLowerCase()) {
-				case 'get':
-					this.triggerEvt('nowContextGetReqDone', ajaxReq.response);
-					this._updateContext(ajaxReq, detail);
-					break;
-				case 'put':
-					this.triggerEvt('nowContextPutReqDone', ajaxReq.response);
-					this._updateContext(ajaxReq, detail);
-					break;
-				case 'post':
-					this.triggerEvt('nowContextPostReqDone', ajaxReq.response);
-					this._updateContext(ajaxReq, detail);
-					break;
-				case 'patch':
-					this.triggerEvt('nowContextPostReqDone', ajaxReq.response);
-					this._updateContext(ajaxReq, detail);
-					break;
-				case 'delete':
-					this.triggerEvt('nowContextDeleteReqDone', ajaxReq.response);
-					// this._updateContext(ajaxReq, detail);	// TODO
-					break;
+			let data = evt.data;
+			try {
+				let ajaxReq: Now.AjaxRequest = new Now.AjaxRequest(data.ajaxReq);
+				this._updateContext(ajaxReq, {idKey: data.idKey});
+				this.reqResListeners[data.id].resolve(ajaxReq);
+				delete this.reqResListeners[data.id];
+			} catch (err) {
+				this.reqResListeners[data.id].reject(err);
 			}
 		}
 	}

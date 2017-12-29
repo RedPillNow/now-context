@@ -1,22 +1,24 @@
 onmessage = (msgEvt) => {
     let data = msgEvt.data;
-    let detail = data.detail;
-    makeRequest(data.type.toUpperCase(), detail.ajax.url, 'json')
+    let ajax = data.ajax;
+    let id = data.id;
+    makeRequest(ajax)
         .then((xhrData) => {
-        let ajax = {
-            method: data.type.toUpperCase(),
+        let ajaxReq = {
+            method: ajax.method.toUpperCase(),
             requestUrl: xhrData.xhr.responseURL,
             responseType: xhrData.xhr.responseType,
             status: xhrData.xhr.status,
             statusText: xhrData.xhr.statusText,
             withCredentials: xhrData.xhr.withCredentials,
             response: xhrData.xhr.response,
-            payload: detail.ajax.payload,
-            params: detail.ajax.params
+            payload: ajax.payload,
+            params: ajax.params
         };
         let responseObj = {
-            ajax: ajax,
-            detail: detail
+            ajaxReq: ajaxReq,
+            id: id,
+            idKey: data.idKey
         };
         postMessage(responseObj, responseObj.aBuf);
     })
@@ -24,11 +26,11 @@ onmessage = (msgEvt) => {
         throw new Error(err);
     });
 };
-function makeRequest(method, url, responseType) {
+function makeRequest(ajax) {
     return new Promise((resolve, reject) => {
         let xhr = new XMLHttpRequest();
-        xhr.responseType = responseType || 'json';
-        xhr.open(method, url, true);
+        xhr.responseType = ajax.responseType || 'json';
+        xhr.open(ajax.method, ajax.url, true);
         xhr.onload = function (evt) {
             if (xhr.status >= 200 && xhr.status < 300) {
                 resolve({ xhr: xhr, response: xhr.response });
@@ -40,7 +42,13 @@ function makeRequest(method, url, responseType) {
                 });
             }
         };
-        xhr.send();
+        let payloadReqs = ['POST', 'PUT', 'PATCH', 'DELETE'];
+        if (payloadReqs.indexOf(ajax.method) > -1) {
+            xhr.send(ajax.payload);
+        }
+        else {
+            xhr.send();
+        }
     });
 }
 
