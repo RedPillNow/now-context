@@ -1,6 +1,9 @@
 var Now;
 (function (Now) {
     class AjaxRequest {
+        constructor(obj) {
+            Object.assign(this, obj);
+        }
         get method() {
             return this._method;
         }
@@ -131,6 +134,24 @@ var Now;
         }
     }
     Now.PubSubListener = PubSubListener;
+    class ReqResListener extends PubSubListener {
+        constructor(eventName, handler, context) {
+            super(eventName, handler, context);
+        }
+        get resolve() {
+            return this._resolve;
+        }
+        set resolve(resolve) {
+            this._resolve = resolve;
+        }
+        get reject() {
+            return this._reject;
+        }
+        set reject(reject) {
+            this._reject = reject;
+        }
+    }
+    Now.ReqResListener = ReqResListener;
     class PubSubEvent {
         constructor(eventName) {
             this.eventName = eventName;
@@ -239,6 +260,7 @@ var NowElements;
     class NowContext extends NowElements.BaseElement {
         constructor() {
             super();
+            this.globalId = 0;
             this.pubsub = new Now.PubSub();
         }
         static get is() { return 'now-context'; }
@@ -254,144 +276,42 @@ var NowElements;
         }
         connectedCallback() {
             super.connectedCallback();
-            window['NowContext'] = this;
+            window.NowContext = this;
             this.listenEvt('nowcontextget', this._onGetRequest, this);
-            this.listenEvt('nowcontextput', this._onPutRequest, this);
-            this.listenEvt('nowcontextpost', this._onPostRequest, this);
-            this.listenEvt('nowcontextdelete', this._onDeleteRequest, this);
-            this.listenEvt('nowcontextpatch', this._onPatchRequest, this);
+            if (window.Worker) {
+                this.worker = new Worker(this.resolveUrl('now-context-worker.js'));
+                this.onWorkerMsg = this._onWorkerMsg.bind(this);
+                this.worker.addEventListener('message', this.onWorkerMsg);
+            }
         }
         disconnectedCallback() {
             super.disconnectedCallback();
+            this.worker.removeEventListener('message', this.onWorkerMsg);
+            this.unListenEvt('nowcontextget', this._onGetRequest);
         }
         _onGetRequest(detail) {
             if (detail) {
-                let ajax = this.$.getAjax;
-                ajax.params = detail.ajax.parameters;
-                ajax.handleAs = detail.ajax.handleAs || 'json';
-                ajax.url = detail.ajax.url;
-                ajax.contentType = detail.ajax.contentType || 'application/json';
-                return ajax.generateRequest().completes
-                    .then((ironRequest) => {
-                    this.triggerEvt('nowContextGetReqDone', ironRequest.response);
-                    return this._updateContext(ironRequest, ajax, detail);
-                })
-                    .catch((err) => {
-                    throw new Error(NowContext.is + '.onGetRequest failed');
-                });
+                this.worker.postMessage({ type: detail.ajax.method, detail: detail, id: this.globalId++ });
             }
             else {
                 throw new Error(NowContext.is + ':iron-signal-nowcontextget: No detail provided in signal');
             }
         }
-        _onPutRequest(detail) {
-            if (detail) {
-                let ajax = this.$.putAjax;
-                ajax.params = detail.ajax.parameters;
-                ajax.handleAs = detail.ajax.handleAs || 'json';
-                ajax.url = detail.ajax.url;
-                ajax.contentType = detail.ajax.contentType || 'application/json';
-                ajax.body = detail.ajax.payload;
-                return ajax.generateRequest().completes
-                    .then((ironRequest) => {
-                    this.triggerEvt('nowContextPutReqDone', ironRequest.response);
-                    return this._updateContext(ironRequest, ajax, detail);
-                })
-                    .catch((err) => {
-                    throw new Error(NowContext.is + '.onPutRequest failed');
-                });
-            }
-            else {
-                throw new Error(NowContext.is + ',nowcontextput: No detail provided in signal');
-            }
-        }
-        _onPostRequest(detail) {
-            if (detail) {
-                let ajax = this.$.postAjax;
-                ajax.params = detail.ajax.parameters;
-                ajax.handleAs = detail.ajax.handleAs || 'json';
-                ajax.url = detail.ajax.url;
-                ajax.contentType = detail.ajax.contentType || 'application/json';
-                ajax.body = detail.ajax.payload;
-                return ajax.generateRequest().completes
-                    .then((ironRequest) => {
-                    this.triggerEvt('nowContextPostReqDone', ironRequest.response);
-                    return this._updateContext(ironRequest, ajax, detail);
-                })
-                    .catch((err) => {
-                    throw new Error(NowContext.is + '.onPutRequest failed');
-                });
-            }
-            else {
-                throw new Error(NowContext.is + ',nowcontextpost: No detail provided in signal');
-            }
-        }
-        _onDeleteRequest(detail) {
-            if (detail) {
-                let ajax = this.$.deleteAjax;
-                ajax.params = detail.ajax.parameters;
-                ajax.handleAs = detail.ajax.handleAs || 'json';
-                ajax.url = detail.ajax.url;
-                ajax.contentType = detail.ajax.contentType || 'application/json';
-                return ajax.generateRequest().completes;
-            }
-            else {
-                throw new Error(NowContext.is + ',nowcontextdelete: No detail provided in signal');
-            }
-        }
-        _onPatchRequest(detail) {
-            if (detail) {
-                let ajax = this.$.patchAjax;
-                ajax.params = detail.ajax.parameters;
-                ajax.handleAs = detail.ajax.handleAs || 'json';
-                ajax.url = detail.ajax.url;
-                ajax.contentType = detail.ajax.contentType || 'application/json';
-                ajax.body = detail.ajax.payload;
-                return ajax.generateRequest().completes
-                    .then((ironRequest) => {
-                    this.triggerEvt('nowContextPatchReqDone', ironRequest.response);
-                    return this._updateContext(ironRequest, ajax, detail);
-                })
-                    .catch((err) => {
-                    throw new Error(NowContext.is + '.onPutRequest failed');
-                });
-            }
-            else {
-                throw new Error(NowContext.is + ',nowcontextpatch: No detail provided in signal');
-            }
-        }
-        _getAjaxRequest(ironRequest, ajax) {
-            if (ironRequest && ajax) {
-                let ajaxReq = new Now.AjaxRequest();
-                ajaxReq.response = ironRequest.response;
-                ajaxReq.requestUrl = ironRequest.url;
-                ajaxReq.status = ironRequest.status;
-                ajaxReq.statusText = ironRequest.statusText;
-                ajaxReq.responseType = ironRequest.xhr._responseType;
-                ajaxReq.withCredentials = ironRequest.xhr.withCredentials;
-                ajaxReq.payload = ajax.body;
-                ajaxReq.method = ajax.method;
-                ajaxReq.params = ajax.params;
-                return ajaxReq;
-            }
-            return null;
-        }
-        _createContextItem(ironRequest, ajaxRequest, idKey) {
-            if (ironRequest && ajaxRequest) {
+        _createContextItem(ajaxRequest, idKey) {
+            if (ajaxRequest) {
                 let contextItem = new Now.ContextItem();
                 contextItem.idKey = idKey;
-                contextItem.model = ironRequest.response;
+                contextItem.model = ajaxRequest.response;
                 contextItem.lastAjaxRequest = ajaxRequest;
                 return contextItem;
             }
             return null;
         }
-        _updateContext(ironRequest, ajax, detail) {
+        _updateContext(ajaxReq, detail) {
             try {
-                let response = ironRequest.response;
+                let response = ajaxReq.response;
                 if (response) {
-                    let ajaxReq = this._getAjaxRequest(ironRequest, ajax);
-                    let contextItem = this._createContextItem(ironRequest, ajaxReq, detail.ajax.idKey);
+                    let contextItem = this._createContextItem(ajaxReq, detail.ajax.idKey);
                     let contextItemKey = this._getContextKey(ajaxReq, contextItem);
                     let isUrl = false;
                     if ((contextItemKey && contextItemKey.indexOf) && (contextItemKey.indexOf('http:') > -1 || contextItemKey.indexOf('https:') > -1)) {
@@ -449,6 +369,31 @@ var NowElements;
         unListenEvt(eventName, fn) {
             let pubsub = this.get('pubsub');
             pubsub.off(eventName, fn);
+        }
+        _onWorkerMsg(evt) {
+            let ajaxReq = new Now.AjaxRequest(evt.data.ajax);
+            let detail = evt.data.detail;
+            switch (ajaxReq.method.toLowerCase()) {
+                case 'get':
+                    this.triggerEvt('nowContextGetReqDone', ajaxReq.response);
+                    this._updateContext(ajaxReq, detail);
+                    break;
+                case 'put':
+                    this.triggerEvt('nowContextPutReqDone', ajaxReq.response);
+                    this._updateContext(ajaxReq, detail);
+                    break;
+                case 'post':
+                    this.triggerEvt('nowContextPostReqDone', ajaxReq.response);
+                    this._updateContext(ajaxReq, detail);
+                    break;
+                case 'patch':
+                    this.triggerEvt('nowContextPostReqDone', ajaxReq.response);
+                    this._updateContext(ajaxReq, detail);
+                    break;
+                case 'delete':
+                    this.triggerEvt('nowContextDeleteReqDone', ajaxReq.response);
+                    break;
+            }
         }
     }
     NowElements.NowContext = NowContext;

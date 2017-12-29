@@ -112,8 +112,8 @@ class NowContextTest extends Polymer.Element {
 	connectedCallback() {
 		super.connectedCallback();
 		setTimeout(() => {
-			NowContext.listenEvt('nowContextGetReqDone', this.onPubSubGetReqDone, this);
-			NowContext.listenEvt('nowContextItemUpdated', this.onPubSubContextUpdated);
+			NowContext.listenEvt('nowContextGetReqDone', this.onContextGetReqDone, this);
+			NowContext.listenEvt('nowContextItemUpdated', this.onContextItemUpdated);
 			NowContext.listenEvt('nowContextItemAdded', this.onContextItemAdded, this);
 		}, 1000);
 	}
@@ -157,15 +157,14 @@ class NowContextTest extends Polymer.Element {
 		let detailObj = {
 			ajax: {
 				url: url,
-				idKey: idKey
+				idKey: idKey,
+				method: 'GET'
 			}
 		};
 		if (this.context.hasOwnProperty(contextKey)) {
 			console.warn(NowContextTest.is, 'We will do the request, however the display will not be updated because we already have the requested item in the context', this.context[contextKey]);
 		}
 		NowContext.triggerEvt('nowcontextget', detailObj);
-		/* let evt = new CustomEvent('nowcontextget', {detail: detailObj, bubbles: true, composed: true});
-		window.dispatchEvent(evt); */
 	}
 
 	clearDisplay(evt) {
@@ -173,13 +172,12 @@ class NowContextTest extends Polymer.Element {
 		this.set('count', 0);
 	}
 
-	onPubSubGetReqDone(data) {
+	onContextGetReqDone(data) {
 		this.getReqCount++;
-		// console.log(NowContextTest.is, 'onPubSubGetReqDone, This is the handler for the nowContextGetReqDone pubsub event', data, 'Handler context=', this);
 	}
 
-	onPubSubContextUpdated(data) {
-		console.log(NowContextTest.is, 'onPubSubContextUpdated, This is the handler for the nowContextItemUpdated pubsub event', data, 'Handler context=', this);
+	onContextItemUpdated(data) {
+		console.log(NowContextTest.is, 'onNowContextContextUpdated, This is the handler for the nowContextItemUpdated pubsub event', data, 'Handler context=', this);
 	}
 }
 customElements.define(NowContextTest.is, NowContextTest);

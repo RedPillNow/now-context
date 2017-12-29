@@ -11,6 +11,10 @@ namespace Now {
 		private _statusText: string;
 		private _withCredentials: boolean;
 
+		constructor(obj?: any) {
+			Object.assign(this, obj);
+		}
+
 		get method() {
 			return this._method;
 		}
@@ -179,6 +183,31 @@ namespace Now {
 		}
 	}
 
+	export class ReqResListener extends PubSubListener {
+		private _resolve: any;
+		private _reject: any;
+
+		constructor(eventName, handler, context?) {
+			super(eventName, handler, context);
+		}
+
+		get resolve() {
+			return this._resolve;
+		}
+
+		set resolve(resolve) {
+			this._resolve = resolve;
+		}
+
+		get reject() {
+			return this._reject;
+		}
+
+		set reject(reject) {
+			this._reject = reject;
+		}
+	}
+
 	export class PubSubEvent {
 		private _eventName: string;
 		private _listeners: PubSubListener[];
@@ -325,7 +354,7 @@ namespace Now {
 }
 
 namespace NowElements {
-
+	declare var window;
 	/**
 	 * Manage the context of an application. All XHR requests should pass through this element and it
 	 * will keep track of all requests and store them in the context object. This element also provides
@@ -345,6 +374,17 @@ namespace NowElements {
 				pubsub: Object
 			}
 		}
+		/**
+		 * This is to keep track of a Promise's resolve/reject methods
+		 * @type {number}
+		 */
+		private globalId: number = 0;
+		/**
+		 * The web worker
+		 * @private
+		 * @type {Worker}
+		 */
+		private worker: Worker;
 
 		constructor() {
 			super();
@@ -356,30 +396,35 @@ namespace NowElements {
 		connectedCallback() {
 			// Create a global for interacting with this element
 			super.connectedCallback();
-			window['NowContext'] = this;
+			window.NowContext = this;
 			this.listenEvt('nowcontextget', this._onGetRequest, this);
-			this.listenEvt('nowcontextput', this._onPutRequest, this);
-			this.listenEvt('nowcontextpost', this._onPostRequest, this);
-			this.listenEvt('nowcontextdelete', this._onDeleteRequest, this);
-			this.listenEvt('nowcontextpatch', this._onPatchRequest, this);
+			if (window.Worker) {
+				this.worker = new Worker(this.resolveUrl('now-context-worker.js'));
+				(<any>this).onWorkerMsg = this._onWorkerMsg.bind(this);
+				this.worker.addEventListener('message', (<any>this).onWorkerMsg);
+			}
 		}
-
+		/**
+		 * UnSubscribe to relevant PubSub events and worker message event
+		 *
+		 */
 		disconnectedCallback() {
 			super.disconnectedCallback();
+			this.worker.removeEventListener('message', (<any>this).onWorkerMsg);
+			this.unListenEvt('nowcontextget', this._onGetRequest);
 		}
 		/**
 		 * Perform a GET request and return the promise
-		 * @param {CustomEvent} evt
-		 * @property {any} evt.detail
-		 * @property {any} evt.detail.ajax
-		 * @property {any} evt.detail.ajax.payload
-		 * @property {any} evt.detail.ajax.parameters
-		 * @property {string} evt.detail.ajax.contentType
-		 * @property {string} evt.detail.ajax.handleAs
-		 * @property {string} evt.detail.ajax.url
-		 * @property {any} evt.detail.context
-		 * @property {HTMLElement} evt.detail.context.element
-		 * @property {any} evt.detail.context.model
+		 * @param {CustomEvent} detail
+		 * @property {any} detail.ajax
+		 * @property {any} detail.ajax.payload
+		 * @property {any} detail.ajax.parameters
+		 * @property {string} detail.ajax.contentType
+		 * @property {string} detail.ajax.handleAs
+		 * @property {string} detail.ajax.url
+		 * @property {any} detail.context
+		 * @property {HTMLElement} detail.context.element
+		 * @property {any} detail.context.model
 		 * @listens pubsub#nowcontextget
 		 * @event nowContextGetReqDone
 		 * @returns {Promise}
@@ -387,183 +432,10 @@ namespace NowElements {
 		private _onGetRequest(detail: any) {
 			// console.log(NowContext.is, 'onGetRequest', arguments);
 			if (detail) {
-				let ajax: any = this.$.getAjax;
-				ajax.params = detail.ajax.parameters;
-				ajax.handleAs = detail.ajax.handleAs || 'json';
-				ajax.url = detail.ajax.url
-				ajax.contentType = detail.ajax.contentType || 'application/json';
-				return ajax.generateRequest().completes
-					.then((ironRequest) => {
-						this.triggerEvt('nowContextGetReqDone', ironRequest.response);
-                        return this._updateContext(ironRequest, ajax, detail);
-					})
-					.catch((err) => {
-						throw new Error(NowContext.is + '.onGetRequest failed');
-					});
+				this.worker.postMessage({ type: detail.ajax.method, detail: detail, id: this.globalId++ });
 			}else {
 				throw new Error(NowContext.is + ':iron-signal-nowcontextget: No detail provided in signal');
 			}
-		}
-		/**
-		 *
-		 * @param {CustomEvent} evt
-		 * @property {any} evt.detail
-		 * @property {any} evt.detail.ajax
-		 * @property {any} evt.detail.ajax.payload
-		 * @property {any} evt.detail.ajax.parameters
-		 * @property {string} evt.detail.ajax.contentType
-		 * @property {string} evt.detail.ajax.handleAs
-		 * @property {string} evt.detail.ajax.url
-		 * @property {any} evt.detail.context
-		 * @property {HTMLElement} evt.detail.context.element
-		 * @property {any} evt.detail.context.model
-		 * @listens pubsub#nowcontextput
-		 * @event nowContextPutReqDone
-		 * @returns {Promise}
-		 */
-		private _onPutRequest(detail: any) {
-			if (detail) {
-				let ajax: any = this.$.putAjax;
-				ajax.params = detail.ajax.parameters;
-				ajax.handleAs = detail.ajax.handleAs || 'json';
-				ajax.url = detail.ajax.url
-				ajax.contentType = detail.ajax.contentType || 'application/json';
-				ajax.body = detail.ajax.payload;
-				return ajax.generateRequest().completes
-					.then((ironRequest) => {
-						this.triggerEvt('nowContextPutReqDone', ironRequest.response);
-						return this._updateContext(ironRequest, ajax, detail);
-					})
-					.catch((err) => {
-						throw new Error(NowContext.is + '.onPutRequest failed');
-					});
-			}else {
-				throw new Error(NowContext.is + ',nowcontextput: No detail provided in signal');
-			}
-		}
-		/**
-		 *
-		 * @param {CustomEvent} evt
-		 * @property {any} evt.detail
-		 * @property {any} evt.detail.ajax
-		 * @property {any} evt.detail.ajax.payload
-		 * @property {any} evt.detail.ajax.parameters
-		 * @property {string} evt.detail.ajax.contentType
-		 * @property {string} evt.detail.ajax.handleAs
-		 * @property {string} evt.detail.ajax.url
-		 * @property {any} evt.detail.context
-		 * @property {HTMLElement} evt.detail.context.element
-		 * @property {any} evt.detail.context.model
-		 * @listens pubsub#nowcontextpost
-		 * @event nowContextPostReqDone
-		 * @returns {Promise}
-		 */
-		private _onPostRequest(detail: any) {
-			if (detail) {
-				let ajax: any = this.$.postAjax;
-				ajax.params = detail.ajax.parameters;
-				ajax.handleAs = detail.ajax.handleAs || 'json';
-				ajax.url = detail.ajax.url
-				ajax.contentType = detail.ajax.contentType || 'application/json';
-				ajax.body = detail.ajax.payload;
-				return ajax.generateRequest().completes
-					.then((ironRequest) => {
-						this.triggerEvt('nowContextPostReqDone', ironRequest.response);
-						return this._updateContext(ironRequest, ajax, detail);
-					})
-					.catch((err) => {
-						throw new Error(NowContext.is + '.onPutRequest failed');
-					});
-			}else {
-				throw new Error(NowContext.is + ',nowcontextpost: No detail provided in signal');
-			}
-		}
-		/**
-		 *
-		 * @param {CustomEvent} evt
-		 * @property {any} evt.detail
-		 * @property {any} evt.detail.ajax
-		 * @property {any} evt.detail.ajax.payload
-		 * @property {any} evt.detail.ajax.parameters
-		 * @property {string} evt.detail.ajax.contentType
-		 * @property {string} evt.detail.ajax.handleAs
-		 * @property {string} evt.detail.ajax.url
-		 * @property {any} evt.detail.context
-		 * @property {HTMLElement} evt.detail.context.element
-		 * @property {any} evt.detail.context.model
-		 * @listens pubsub#nowcontextdelete
-		 * @returns {Promise}
-		 */
-		private _onDeleteRequest(detail: any) {
-			if (detail) {
-				let ajax: any = this.$.deleteAjax;
-				ajax.params = detail.ajax.parameters;
-				ajax.handleAs = detail.ajax.handleAs || 'json';
-				ajax.url = detail.ajax.url
-				ajax.contentType = detail.ajax.contentType || 'application/json';
-				return ajax.generateRequest().completes;
-			}else {
-				throw new Error(NowContext.is + ',nowcontextdelete: No detail provided in signal');
-			}
-		}
-		/**
-		 *
-		 * @param {CustomEvent} evt
-		 * @property {any} evt.detail
-		 * @property {any} evt.detail.ajax
-		 * @property {any} evt.detail.ajax.payload
-		 * @property {any} evt.detail.ajax.parameters
-		 * @property {string} evt.detail.ajax.contentType
-		 * @property {string} evt.detail.ajax.handleAs
-		 * @property {string} evt.detail.ajax.url
-		 * @property {any} evt.detail.context
-		 * @property {HTMLElement} evt.detail.context.element
-		 * @property {any} evt.detail.context.model
-		 * @listens pubsub#nowcontextpatch
-		 * @event nowContextPatchReqDone
-		 * @returns {Promise}
-		 */
-		private _onPatchRequest(detail: any) {
-			if (detail) {
-				let ajax: any = this.$.patchAjax;
-				ajax.params = detail.ajax.parameters;
-				ajax.handleAs = detail.ajax.handleAs || 'json';
-				ajax.url = detail.ajax.url
-				ajax.contentType = detail.ajax.contentType || 'application/json';
-				ajax.body = detail.ajax.payload;
-				return ajax.generateRequest().completes
-					.then((ironRequest) => {
-						this.triggerEvt('nowContextPatchReqDone', ironRequest.response);
-						return this._updateContext(ironRequest, ajax, detail);
-					})
-					.catch((err) => {
-						throw new Error(NowContext.is + '.onPutRequest failed');
-					});
-			}else {
-				throw new Error(NowContext.is + ',nowcontextpatch: No detail provided in signal');
-			}
-		}
-		/**
-		 * Build a Now.AjaxRequest based on the ajax request
-		 * @param {any} ironRequest
-		 * @param {any} ajax
-		 * @returns {Now.AjaxRequest}
-		 */
-		private _getAjaxRequest(ironRequest, ajax): Now.AjaxRequest {
-			if (ironRequest && ajax) {
-				let ajaxReq = new Now.AjaxRequest();
-				ajaxReq.response = ironRequest.response;
-				ajaxReq.requestUrl = ironRequest.url;
-				ajaxReq.status = ironRequest.status;
-				ajaxReq.statusText = ironRequest.statusText;
-				ajaxReq.responseType = ironRequest.xhr._responseType;
-				ajaxReq.withCredentials = ironRequest.xhr.withCredentials;
-				ajaxReq.payload = ajax.body;
-				ajaxReq.method = ajax.method;
-				ajaxReq.params = ajax.params;
-				return ajaxReq;
-			}
-			return null;
 		}
 		/**
 		 * Get a Now.ContextItem based on the ironRequest
@@ -571,11 +443,11 @@ namespace NowElements {
 		 * @param {Now.AjaxRequest} ajaxRequest
 		 * @returns {Now.ContextItem}
 		 */
-		private _createContextItem(ironRequest, ajaxRequest: Now.AjaxRequest, idKey: string): Now.ContextItem {
-			if (ironRequest && ajaxRequest) {
+		private _createContextItem(ajaxRequest: Now.AjaxRequest, idKey: string): Now.ContextItem {
+			if (ajaxRequest) {
 				let contextItem = new Now.ContextItem();
 				contextItem.idKey = idKey;
-				contextItem.model = ironRequest.response;
+				contextItem.model = ajaxRequest.response;
 				contextItem.lastAjaxRequest = ajaxRequest;
 				return contextItem;
 			}
@@ -600,12 +472,11 @@ namespace NowElements {
 		 * @event nowContextItemAdded
 		 * @returns {boolean}
 		 */
-		private _updateContext(ironRequest: any, ajax: any, detail: any) {
+		private _updateContext(ajaxReq: Now.AjaxRequest, detail: any) {
 			try {
-				let response = ironRequest.response;
+				let response = ajaxReq.response;
 				if (response) {
-					let ajaxReq = this._getAjaxRequest(ironRequest, ajax);
-					let contextItem = this._createContextItem(ironRequest, ajaxReq, detail.ajax.idKey);
+					let contextItem = this._createContextItem(ajaxReq, detail.ajax.idKey);
 					let contextItemKey = this._getContextKey(ajaxReq, contextItem);
 					let isUrl = false;
 					if ((contextItemKey && contextItemKey.indexOf) && (contextItemKey.indexOf('http:') > -1 || contextItemKey.indexOf('https:') > -1)) {
@@ -690,6 +561,38 @@ namespace NowElements {
 		unListenEvt(eventName, fn) {
 			let pubsub: Now.PubSub = this.get('pubsub');
 			pubsub.off(eventName, fn);
+		}
+		/**
+		 * Responds to the web worker postMessage event
+		 *
+		 * @private
+		 * @param {MessageEvent} evt
+		 */
+		private _onWorkerMsg(evt: MessageEvent) {
+			let ajaxReq: Now.AjaxRequest = new Now.AjaxRequest(evt.data.ajax);
+			let detail = evt.data.detail;
+			switch (ajaxReq.method.toLowerCase()) {
+				case 'get':
+					this.triggerEvt('nowContextGetReqDone', ajaxReq.response);
+					this._updateContext(ajaxReq, detail);
+					break;
+				case 'put':
+					this.triggerEvt('nowContextPutReqDone', ajaxReq.response);
+					this._updateContext(ajaxReq, detail);
+					break;
+				case 'post':
+					this.triggerEvt('nowContextPostReqDone', ajaxReq.response);
+					this._updateContext(ajaxReq, detail);
+					break;
+				case 'patch':
+					this.triggerEvt('nowContextPostReqDone', ajaxReq.response);
+					this._updateContext(ajaxReq, detail);
+					break;
+				case 'delete':
+					this.triggerEvt('nowContextDeleteReqDone', ajaxReq.response);
+					// this._updateContext(ajaxReq, detail);	// TODO
+					break;
+			}
 		}
 	}
 }
