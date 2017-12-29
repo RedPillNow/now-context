@@ -518,13 +518,13 @@ namespace NowElements {
 		 */
 		private _getContextKey(ajaxReq: Now.AjaxRequest, contextItem: Now.ContextItem) {
 			let contextItemKey = null;
-            if (Array.isArray(ajaxReq.response)) {
-                contextItemKey = ajaxReq.requestUrl;
-            } else {
-                contextItemKey = contextItem.id;
-            }
-            return contextItemKey;
-        }
+			if (Array.isArray(ajaxReq.response)) {
+				contextItemKey = ajaxReq.requestUrl;
+			} else {
+				contextItemKey = contextItem.id;
+			}
+			return contextItemKey;
+		}
 		/**
 		 * Find a context item by it's contextItemKey
 		 * @private
