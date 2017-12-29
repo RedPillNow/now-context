@@ -389,25 +389,35 @@ namespace NowElements {
 					value: {},
 					notify: true
 				},
-				pubsub: Object
 			}
 		}
 		/**
-		 * This is to keep track of a Promise's resolve/reject methods
-		 * @type {number}
+		 * The PubSub system
+		 * @private
+		 * @type {Now.PubSub}
 		 */
-		private globalId: number = 0;
+		private pubsub: Now.PubSub;
 		/**
 		 * The web worker
 		 * @private
 		 * @type {Worker}
 		 */
 		private worker: Worker;
+		/**
+		 * This is to keep track of a Promise's resolve/reject methods
+		 * @type {number}
+		 */
+		private globalId: number = 0;
+		/**
+		 * Listeners for the Request/Response system
+		 * @private
+		 * @type {any}
+		 */
 		private reqResListeners = {};
 
 		constructor() {
 			super();
-			(<any>this).pubsub = new Now.PubSub();
+			this.pubsub = new Now.PubSub();
 		}
 		/**
 		 * Subscribe to relevant PubSub events
@@ -428,7 +438,9 @@ namespace NowElements {
 		 */
 		disconnectedCallback() {
 			super.disconnectedCallback();
-			this.worker.removeEventListener('message', (<any>this).onWorkerMsg);
+			if (window.Worker) {
+				this.worker.removeEventListener('message', (<any>this).onWorkerMsg);
+			}
 		}
 		/**
 		 * Get a Now.ContextItem based on the ironRequest
@@ -532,8 +544,7 @@ namespace NowElements {
 		 * @param {any} data
 		 */
 		triggerEvt(eventName, data) {
-			let pubsub: Now.PubSub = this.get('pubsub');
-			pubsub.trigger(eventName, data);
+			this.pubsub.trigger(eventName, data);
 		}
 		/**
 		 * Subscribe to pubsub events
@@ -543,8 +554,7 @@ namespace NowElements {
 		 * @param {any} context The context in which to run the callback
 		 */
 		listenEvt(eventName, fn, context) {
-			let pubsub: Now.PubSub = this.get('pubsub');
-			pubsub.on(eventName, fn, context);
+			this.pubsub.on(eventName, fn, context);
 		}
 		/**
 		 * Un-Subscribe from an event
@@ -552,8 +562,7 @@ namespace NowElements {
 		 * @param {function} fn The callback for the event
 		 */
 		unListenEvt(eventName, fn) {
-			let pubsub: Now.PubSub = this.get('pubsub');
-			pubsub.off(eventName, fn);
+			this.pubsub.off(eventName, fn);
 		}
 		/**
 		 * A request response function. This is mainly used for doing an ajax

@@ -281,7 +281,6 @@ var NowElements;
                     value: {},
                     notify: true
                 },
-                pubsub: Object
             };
         }
         connectedCallback() {
@@ -295,7 +294,9 @@ var NowElements;
         }
         disconnectedCallback() {
             super.disconnectedCallback();
-            this.worker.removeEventListener('message', this.onWorkerMsg);
+            if (window.Worker) {
+                this.worker.removeEventListener('message', this.onWorkerMsg);
+            }
         }
         _createContextItem(ajaxRequest, idKey) {
             if (ajaxRequest) {
@@ -359,16 +360,13 @@ var NowElements;
             return null;
         }
         triggerEvt(eventName, data) {
-            let pubsub = this.get('pubsub');
-            pubsub.trigger(eventName, data);
+            this.pubsub.trigger(eventName, data);
         }
         listenEvt(eventName, fn, context) {
-            let pubsub = this.get('pubsub');
-            pubsub.on(eventName, fn, context);
+            this.pubsub.on(eventName, fn, context);
         }
         unListenEvt(eventName, fn) {
-            let pubsub = this.get('pubsub');
-            pubsub.off(eventName, fn);
+            this.pubsub.off(eventName, fn);
         }
         reqres(payload) {
             return this._sendWorkerMsg(payload);
