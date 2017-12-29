@@ -1,8 +1,6 @@
 <link rel="import" href="../polymer/polymer-element.html">
 <link rel="import" href="../now-core/now-core.html">
 
-<link rel="import" href="../iron-ajax/iron-ajax.html">
-
 <!--
 `now-context`
 
@@ -18,34 +16,6 @@ Manage the context of an application. All XHR requests should pass through this 
 				display: none;
 			}
 		</style>
-		<iron-ajax
-			id="putAjax"
-			method="PUT"
-			content-type="application/json"
-			handle-as="json"
-			verbose>
-		</iron-ajax>
-		<iron-ajax
-			id="postAjax"
-			method="POST"
-			content-type="application/json"
-			handle-as="json"
-			verbose>
-		</iron-ajax>
-		<iron-ajax
-			id="deleteAjax"
-			method="DELETE"
-			content-type="application/json"
-			handle-as="json"
-			verbose>
-		</iron-ajax>
-		<iron-ajax
-			id="patchAjax"
-			method="PATCH"
-			content-type="application/json"
-			handle-as="json"
-			verbose>
-		</iron-ajax>
 	</template>
 </dom-module>
 
