@@ -625,10 +625,10 @@ namespace NowElements {
 				let ajaxReq: Now.AjaxRequest = new Now.AjaxRequest(data.ajaxReq);
 				this._updateContext(ajaxReq, {idKey: data.idKey});
 				this.reqResListeners[data.id].resolve(ajaxReq);
-				delete this.reqResListeners[data.id];
 			} catch (err) {
 				this.reqResListeners[data.id].reject(err);
 			}
+			delete this.reqResListeners[data.id];
 		}
 	}
 }
