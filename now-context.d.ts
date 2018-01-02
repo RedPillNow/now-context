@@ -39,18 +39,38 @@ declare namespace Now {
         eventName: string;
         handler: any;
         context: any;
-    }
+	}
+	class ReqResListener extends PubSubListener {
+		private _resolve;
+		private _reject;
+		private _id;
+		constructor(eventName: string, handler: any, context?: any);
+		resolve: any;
+		reject: any;
+		id: string;
+	}
+	class PubSubEvent {
+		private _eventName;
+		private _listeners;
+		constructor()
+		eventName: string;
+		listeners: Now.PubSubListener[];
+	}
     class PubSub {
-        private _listeners;
+		private _events;
+		private _history;
         constructor();
-        listeners: any;
+		events: any;
+		history: any[];
         on(eventName: any, fn: any, context: any): void;
         off(eventName: any, fn: any): void;
-        trigger(eventName: any, data: any): void;
+		trigger(eventName: any, data: any): void;
+		private _listenerExists(eventName: string, fn: any, context: any): boolean;
+		private _updateHistory(eventName: string, listeners: any[]);
     }
 }
 declare namespace NowElements {
-    class NowContext extends NowElements.BaseElement {
+    class NowContext extends Polymer.Element {
         static readonly is: string;
         static readonly properties: {
             context: {
@@ -58,21 +78,24 @@ declare namespace NowElements {
                 value: {};
                 notify: boolean;
             };
-        };
+		};
+		private pubsub: Now.PubSub;
+		private worker: Worker;
+		private globalId: number;
+		private reResListeners: any;
         constructor();
         connectedCallback(): void;
         disconnectedCallback(): void;
-        private _onGetRequest(evt);
-        private _onPutRequest(evt);
-        private _onPostRequest(evt);
-        private _onDeleteRequest(evt);
-        private _onPatchRequest(evt);
-        private _getAjaxRequest(ironRequest, ajax);
         private _createContextItem(ironRequest, ajaxRequest, idKey);
         private _updateContext(ironRequest, ajax, detail);
         private _getContextKey(ajaxReq, contextItem);
-        findContextItem(contextItemKey: any): Now.ContextItem;
-        private _onRequestResponse(evt);
-        private _dispatchEvent(options);
+		findContextItem(contextItemKey: any): Now.ContextItem;
+		triggerEvt(eventName: string, data);
+		listenEvt(eventName: string, fn, context);
+		unListenEvt(eventName: string, fn);
+		reqres(payload);
+		private _sendWorkerMsg(payload);
+		private _onWorkerMsg(evt: MessageEvent);
+
     }
 }
