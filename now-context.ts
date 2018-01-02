@@ -380,7 +380,7 @@ namespace NowElements {
 	 *
 	 * @author Keith Strickland <keith@redpillnow.com>
 	 */
-	export class NowContext extends NowElements.BaseElement {
+	export class NowContext extends Polymer.Element {
 		static get is() { return 'now-context' }
 		static get properties() {
 			return {

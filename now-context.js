@@ -266,7 +266,7 @@ var Now;
 })(Now || (Now = {}));
 var NowElements;
 (function (NowElements) {
-    class NowContext extends NowElements.BaseElement {
+    class NowContext extends Polymer.Element {
         constructor() {
             super();
             this.globalId = 0;
