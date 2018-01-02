@@ -495,7 +495,6 @@ namespace NowElements {
 					}
 					let evtName = itemMerged ? 'nowContextItemUpdated' : 'nowContextItemAdded';
 					if (!isUrl) {
-						contextItemKey = contextItemKey ? contextItemKey : ajaxReq.requestUrl;
 						let path = 'context.' + contextItemKey;
 						this.set(path, contextItem);
 					} else {
@@ -523,6 +522,9 @@ namespace NowElements {
 				contextItemKey = ajaxReq.requestUrl;
 			} else {
 				contextItemKey = contextItem.id;
+				if (!contextItemKey) {
+					contextItemKey = ajaxReq.requestUrl;
+				}
 			}
 			return contextItemKey;
 		}
