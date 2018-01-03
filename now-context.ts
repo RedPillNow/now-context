@@ -201,6 +201,10 @@ namespace Now {
 			this._id = id;
 		}
 
+		get handler() {
+			return super.handler;
+		}
+
 		set handler(handler) {
 			this._handler = handler;
 		}
@@ -223,18 +227,18 @@ namespace Now {
 	}
 
 	export class PubSubEvent {
-		private _eventName: string;
+		private _eventName: string | Symbol;
 		private _listeners: PubSubListener[];
 
 		constructor(eventName?) {
 			this.eventName = eventName;
 		}
 
-		get eventName() {
+		get eventName(): string | Symbol {
 			return this._eventName;
 		}
 
-		set eventName(eventName) {
+		set eventName(eventName: string | Symbol) {
 			this._eventName = eventName;
 		}
 
@@ -282,14 +286,48 @@ namespace Now {
 		 */
 		on(eventName, fn, context): void {
 			if (!this._listenerExists(eventName, fn, context)) {
-				let listener = new PubSubListener(eventName, fn, context);
-				this.events[eventName] = this.events[eventName] || new Now.PubSubEvent(eventName);
-				let listeners = this.events[eventName].listeners;
-				listeners.push(listener);
-				this.events[eventName].listeners = listeners;
+				this.createListener(eventName, fn, context, false);
 			} else {
 				console.warn('Listener for ' + eventName + ' with callback ', fn, ' already exists!');
 			}
+		}
+		/**
+		 * Subscribe a request response listener to an event
+		 * @param {any} eventName
+		 * @param {function} fn The callback to run
+		 * @param {any} context The context in which to run the callback
+		 */
+		onReqRes(eventName, fn, context): void {
+			if (!this._listenerExists(eventName, fn, context)) {
+				let evt = this.events[eventName];
+				if (evt && evt.listeners && evt.listeners.length > 0) {
+					console.warn('Now.PubSub: We only allow the creation of one listener for a ReqRes event. Listener not created');
+				} else {
+					this.createListener(eventName, fn, context, true);
+				}
+			} else {
+				console.warn('Listener for ' + eventName + ' with callback ', fn, ' already exists!');
+			}
+		}
+		/**
+		 * Add a listener to an event
+		 * @private
+		 * @param {*} eventName
+		 * @param {*} fn
+		 * @param {*} context
+		 * @param {boolean} [isReqRes]
+		 */
+		private createListener(eventName: any, fn: any, context?: any, isReqRes?: boolean) {
+			let listener = null;
+			if (isReqRes) {
+				listener = new ReqResListener(eventName, fn, context);
+			} else {
+				listener = new PubSubListener(eventName, fn, context);
+			}
+			this.events[eventName] = this.events[eventName] || new Now.PubSubEvent(eventName);
+			let listeners = this.events[eventName].listeners;
+			listeners.push(listener);
+			this.events[eventName].listeners = listeners;
 		}
 		/**
 		 * Unsubscribe a listener from an event
@@ -314,23 +352,27 @@ namespace Now {
 		 * @param {any} data
 		 */
 		trigger(eventName, data): void {
-			let listeners = [];
+			let executedListeners = [];
+			let returnVal = null;
 			if (this.events[eventName]) {
-				this.events[eventName].listeners.forEach((listener: PubSubListener) => {
+				let listeners = this.events[eventName].listeners;
+				listeners.forEach((listener: PubSubListener) => {
 					if (listener.context && listener.handler && listener.handler.call) {
-						listeners.push(listener);
-						listener.handler.call(listener.context, data);
+						executedListeners.push(listener);
+						this._updateHistory(eventName, executedListeners);
+						returnVal = listener.handler.call(listener.context, data);
 					} else {
 						if (listener.handler && typeof listener.handler === 'function') {
-							listeners.push(listener);
-							listener.handler(data);
+							executedListeners.push(listener);
+							this._updateHistory(eventName, executedListeners);
+							returnVal = listener.handler(data);
 						} else {
 							throw new Error('It appears that the ' + eventName + ' handler is not a function!');
 						}
 					}
 				});
 			}
-			this._updateHistory(eventName, listeners);
+			return returnVal;
 		}
 		/**
 		 * Determine if a listener already exists for a particular event. We can only
@@ -388,7 +430,7 @@ namespace NowElements {
 					type: Object,
 					value: {},
 					notify: true
-				},
+				}
 			}
 		}
 		/**
@@ -431,6 +473,8 @@ namespace NowElements {
 				(<any>this).onWorkerMsg = this._onWorkerMsg.bind(this);
 				this.worker.addEventListener('message', (<any>this).onWorkerMsg);
 			}
+			const loadedEvt = new CustomEvent('now-context-loaded', { detail: this });
+			document.dispatchEvent(loadedEvt);
 		}
 		/**
 		 * UnSubscribe to relevant PubSub events and worker message event
@@ -540,29 +584,39 @@ namespace NowElements {
 		}
 		/**
 		 * Trigger a pubsub event. This does not create a true Event or CustomEvent item
-		 * @param {string} eventName
+		 * @param {string | Symbol} eventName
 		 * @param {any} data
+		 * @returns {any | Promise}
 		 */
 		triggerEvt(eventName, data) {
-			this.pubsub.trigger(eventName, data);
+			return this.pubsub.trigger(eventName, data);
 		}
 		/**
 		 * Subscribe to pubsub events
 		 *
-		 * @param {any} eventName The name of the event to listen for
+		 * @param {string | Symbol} eventName The name of the event to listen for
 		 * @param {function} fn The callback function
 		 * @param {any} context The context in which to run the callback
 		 */
-		listenEvt(eventName, fn, context) {
-			this.pubsub.on(eventName, fn, context);
+		listenEvt(eventName: string, fn: any, context?: any) {
+			return this.pubsub.on(eventName, fn, context);
 		}
 		/**
 		 * Un-Subscribe from an event
-		 * @param {any} eventName
+		 * @param {string | Symbol} eventName
 		 * @param {function} fn The callback for the event
 		 */
 		unListenEvt(eventName, fn) {
 			this.pubsub.off(eventName, fn);
+		}
+		/**
+		 * Create a reqres listener. This should return the value of the via a Promise in the callback function
+		 * @param {string | Symbol} eventName
+		 * @param {*} fn - This should return a promise with the appropriate value in the resolve
+		 * @param {*} [context]
+		 */
+		createReqRes(eventName: string, fn: any, context?: any) {
+			this.pubsub.onReqRes(eventName, fn, context);
 		}
 		/**
 		 * A request response function. This is mainly used for doing an ajax
@@ -623,8 +677,9 @@ namespace NowElements {
 			let data = evt.data;
 			try {
 				let ajaxReq: Now.AjaxRequest = new Now.AjaxRequest(data.ajaxReq);
-				this._updateContext(ajaxReq, {idKey: data.idKey});
-				this.reqResListeners[data.id].resolve(ajaxReq);
+				this._updateContext(ajaxReq, { idKey: data.idKey });
+				let listener = this.reqResListeners[data.id];
+				listener.resolve(ajaxReq);
 			} catch (err) {
 				this.reqResListeners[data.id].reject(err);
 			}

@@ -144,6 +144,9 @@ var Now;
         set id(id) {
             this._id = id;
         }
+        get handler() {
+            return super.handler;
+        }
         set handler(handler) {
             this._handler = handler;
         }
@@ -197,15 +200,38 @@ var Now;
         }
         on(eventName, fn, context) {
             if (!this._listenerExists(eventName, fn, context)) {
-                let listener = new PubSubListener(eventName, fn, context);
-                this.events[eventName] = this.events[eventName] || new Now.PubSubEvent(eventName);
-                let listeners = this.events[eventName].listeners;
-                listeners.push(listener);
-                this.events[eventName].listeners = listeners;
+                this.createListener(eventName, fn, context, false);
             }
             else {
                 console.warn('Listener for ' + eventName + ' with callback ', fn, ' already exists!');
             }
+        }
+        onReqRes(eventName, fn, context) {
+            if (!this._listenerExists(eventName, fn, context)) {
+                let evt = this.events[eventName];
+                if (evt && evt.listeners && evt.listeners.length > 0) {
+                    console.warn('Now.PubSub: We only allow the creation of one listener for a ReqRes event. Listener not created');
+                }
+                else {
+                    this.createListener(eventName, fn, context, true);
+                }
+            }
+            else {
+                console.warn('Listener for ' + eventName + ' with callback ', fn, ' already exists!');
+            }
+        }
+        createListener(eventName, fn, context, isReqRes) {
+            let listener = null;
+            if (isReqRes) {
+                listener = new ReqResListener(eventName, fn, context);
+            }
+            else {
+                listener = new PubSubListener(eventName, fn, context);
+            }
+            this.events[eventName] = this.events[eventName] || new Now.PubSubEvent(eventName);
+            let listeners = this.events[eventName].listeners;
+            listeners.push(listener);
+            this.events[eventName].listeners = listeners;
         }
         off(eventName, fn) {
             if (this.events[eventName]) {
@@ -219,17 +245,21 @@ var Now;
             }
         }
         trigger(eventName, data) {
-            let listeners = [];
+            let executedListeners = [];
+            let returnVal = null;
             if (this.events[eventName]) {
-                this.events[eventName].listeners.forEach((listener) => {
+                let listeners = this.events[eventName].listeners;
+                listeners.forEach((listener) => {
                     if (listener.context && listener.handler && listener.handler.call) {
-                        listeners.push(listener);
-                        listener.handler.call(listener.context, data);
+                        executedListeners.push(listener);
+                        this._updateHistory(eventName, executedListeners);
+                        returnVal = listener.handler.call(listener.context, data);
                     }
                     else {
                         if (listener.handler && typeof listener.handler === 'function') {
-                            listeners.push(listener);
-                            listener.handler(data);
+                            executedListeners.push(listener);
+                            this._updateHistory(eventName, executedListeners);
+                            returnVal = listener.handler(data);
                         }
                         else {
                             throw new Error('It appears that the ' + eventName + ' handler is not a function!');
@@ -237,7 +267,7 @@ var Now;
                     }
                 });
             }
-            this._updateHistory(eventName, listeners);
+            return returnVal;
         }
         _listenerExists(eventName, fn, context) {
             if (eventName && context) {
@@ -280,7 +310,7 @@ var NowElements;
                     type: Object,
                     value: {},
                     notify: true
-                },
+                }
             };
         }
         connectedCallback() {
@@ -291,6 +321,8 @@ var NowElements;
                 this.onWorkerMsg = this._onWorkerMsg.bind(this);
                 this.worker.addEventListener('message', this.onWorkerMsg);
             }
+            const loadedEvt = new CustomEvent('now-context-loaded', { detail: this });
+            document.dispatchEvent(loadedEvt);
         }
         disconnectedCallback() {
             super.disconnectedCallback();
@@ -344,14 +376,11 @@ var NowElements;
         }
         _getContextKey(ajaxReq, contextItem) {
             let contextItemKey = null;
-            if (Array.isArray(ajaxReq.response)) {
+            if (Array.isArray(ajaxReq.response) || !contextItem.id) {
                 contextItemKey = ajaxReq.requestUrl;
             }
             else {
                 contextItemKey = contextItem.id;
-                if (!contextItemKey) {
-                    contextItemKey = ajaxReq.requestUrl;
-                }
             }
             return contextItemKey;
         }
@@ -363,13 +392,16 @@ var NowElements;
             return null;
         }
         triggerEvt(eventName, data) {
-            this.pubsub.trigger(eventName, data);
+            return this.pubsub.trigger(eventName, data);
         }
         listenEvt(eventName, fn, context) {
-            this.pubsub.on(eventName, fn, context);
+            return this.pubsub.on(eventName, fn, context);
         }
         unListenEvt(eventName, fn) {
             this.pubsub.off(eventName, fn);
+        }
+        createReqRes(eventName, fn, context) {
+            this.pubsub.onReqRes(eventName, fn, context);
         }
         reqres(payload) {
             return this._sendWorkerMsg(payload);
@@ -395,7 +427,8 @@ var NowElements;
             try {
                 let ajaxReq = new Now.AjaxRequest(data.ajaxReq);
                 this._updateContext(ajaxReq, { idKey: data.idKey });
-                this.reqResListeners[data.id].resolve(ajaxReq);
+                let listener = this.reqResListeners[data.id];
+                listener.resolve(ajaxReq);
             }
             catch (err) {
                 this.reqResListeners[data.id].reject(err);
