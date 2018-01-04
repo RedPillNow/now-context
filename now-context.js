@@ -252,13 +252,11 @@ var Now;
                 listeners.forEach((listener) => {
                     if (listener.context && listener.handler && listener.handler.call) {
                         executedListeners.push(listener);
-                        this._updateHistory(eventName, executedListeners);
                         returnVal = listener.handler.call(listener.context, data);
                     }
                     else {
                         if (listener.handler && typeof listener.handler === 'function') {
                             executedListeners.push(listener);
-                            this._updateHistory(eventName, executedListeners);
                             returnVal = listener.handler(data);
                         }
                         else {
@@ -267,6 +265,7 @@ var Now;
                     }
                 });
             }
+            this._updateHistory(eventName, executedListeners);
             return returnVal;
         }
         _listenerExists(eventName, fn, context) {

@@ -36,7 +36,7 @@ declare namespace Now {
         private _handler;
         private _context;
         constructor(eventName: any, handler: any, context?: any);
-        eventName: string;
+        eventName: any;
         handler: any;
         context: any;
 	}
@@ -44,7 +44,7 @@ declare namespace Now {
 		private _resolve;
 		private _reject;
 		private _id;
-		constructor(eventName: string, handler: any, context?: any);
+		constructor(eventName: any, handler: any, context?: any);
 		resolve: any;
 		reject: any;
 		id: string;
@@ -53,7 +53,7 @@ declare namespace Now {
 		private _eventName;
 		private _listeners;
 		constructor()
-		eventName: string;
+		eventName: any;
 		listeners: Now.PubSubListener[];
 	}
     class PubSub {
@@ -90,9 +90,9 @@ declare namespace NowElements {
         private _updateContext(ironRequest, ajax, detail);
         private _getContextKey(ajaxReq, contextItem);
 		findContextItem(contextItemKey: any): Now.ContextItem;
-		triggerEvt(eventName: string, data);
-		listenEvt(eventName: string, fn, context);
-		unListenEvt(eventName: string, fn);
+		triggerEvt(eventName: any, data);
+		listenEvt(eventName: any, fn, context);
+		unListenEvt(eventName: any, fn);
 		reqres(payload);
 		private _sendWorkerMsg(payload);
 		private _onWorkerMsg(evt: MessageEvent);

@@ -136,7 +136,7 @@ namespace Now {
 	}
 
 	export class PubSubListener {
-		private _eventName: string;
+		private _eventName: string | Symbol;
 		protected _handler: any;
 		private _context: any;
 
@@ -146,11 +146,11 @@ namespace Now {
 			this.context = context;
 		}
 
-		get eventName() {
+		get eventName(): string | Symbol {
 			return this._eventName;
 		}
 
-		set eventName(eventName) {
+		set eventName(eventName: string | Symbol) {
 			if (eventName) {
 				this._eventName = eventName;
 			} else {
@@ -284,7 +284,7 @@ namespace Now {
 		 * @param {function} fn The callback to run
 		 * @param {any} context The context in which to run the callback
 		 */
-		on(eventName, fn, context): void {
+		on(eventName: any, fn, context): void {
 			if (!this._listenerExists(eventName, fn, context)) {
 				this.createListener(eventName, fn, context, false);
 			} else {
@@ -297,7 +297,7 @@ namespace Now {
 		 * @param {function} fn The callback to run
 		 * @param {any} context The context in which to run the callback
 		 */
-		onReqRes(eventName, fn, context): void {
+		onReqRes(eventName: any, fn, context): void {
 			if (!this._listenerExists(eventName, fn, context)) {
 				let evt = this.events[eventName];
 				if (evt && evt.listeners && evt.listeners.length > 0) {
@@ -335,7 +335,7 @@ namespace Now {
 		 * @param {any} eventName
 		 * @param {function} fn
 		 */
-		off(eventName, fn): void {
+		off(eventName: any, fn): void {
 			if (this.events[eventName]) {
 				for (let i = 0; i < this.events[eventName].listeners.length; i++) {
 					let listener: PubSubListener = this.events[eventName].listeners[i];
@@ -351,7 +351,7 @@ namespace Now {
 		 * @param {any} eventName
 		 * @param {any} data
 		 */
-		trigger(eventName, data): void {
+		trigger(eventName: any, data): void {
 			let executedListeners = [];
 			let returnVal = null;
 			if (this.events[eventName]) {
@@ -359,12 +359,10 @@ namespace Now {
 				listeners.forEach((listener: PubSubListener) => {
 					if (listener.context && listener.handler && listener.handler.call) {
 						executedListeners.push(listener);
-						this._updateHistory(eventName, executedListeners);
 						returnVal = listener.handler.call(listener.context, data);
 					} else {
 						if (listener.handler && typeof listener.handler === 'function') {
 							executedListeners.push(listener);
-							this._updateHistory(eventName, executedListeners);
 							returnVal = listener.handler(data);
 						} else {
 							throw new Error('It appears that the ' + eventName + ' handler is not a function!');
@@ -372,6 +370,7 @@ namespace Now {
 					}
 				});
 			}
+			this._updateHistory(eventName, executedListeners);
 			return returnVal;
 		}
 		/**
@@ -382,7 +381,7 @@ namespace Now {
 		 * @param {any} context The context of the listener
 		 * @returns {boolean}
 		 */
-		private _listenerExists(eventName: string, fn: any, context: any): boolean {
+		private _listenerExists(eventName: any, fn: any, context: any): boolean {
 			if (eventName && context) {
 				let event: Now.PubSubEvent = this.events[eventName];
 				if (event) {
@@ -400,7 +399,7 @@ namespace Now {
 		 * @param {any} eventName
 		 * @param {any} listeners listeners that were serviced
 		 */
-		private _updateHistory(eventName, listeners): void {
+		private _updateHistory(eventName: any, listeners): void {
 			let dispatchedEvts = this.history;
 			let evtObj = {
 				time: new Date(),
@@ -588,7 +587,7 @@ namespace NowElements {
 		 * @param {any} data
 		 * @returns {any | Promise}
 		 */
-		triggerEvt(eventName, data) {
+		triggerEvt(eventName: any, data: any) {
 			return this.pubsub.trigger(eventName, data);
 		}
 		/**
@@ -598,7 +597,7 @@ namespace NowElements {
 		 * @param {function} fn The callback function
 		 * @param {any} context The context in which to run the callback
 		 */
-		listenEvt(eventName: string, fn: any, context?: any) {
+		listenEvt(eventName: any, fn: any, context?: any) {
 			return this.pubsub.on(eventName, fn, context);
 		}
 		/**
@@ -606,7 +605,7 @@ namespace NowElements {
 		 * @param {string | Symbol} eventName
 		 * @param {function} fn The callback for the event
 		 */
-		unListenEvt(eventName, fn) {
+		unListenEvt(eventName: any, fn) {
 			this.pubsub.off(eventName, fn);
 		}
 		/**
@@ -615,7 +614,7 @@ namespace NowElements {
 		 * @param {*} fn - This should return a promise with the appropriate value in the resolve
 		 * @param {*} [context]
 		 */
-		createReqRes(eventName: string, fn: any, context?: any) {
+		createReqRes(eventName: any, fn: any, context?: any) {
 			this.pubsub.onReqRes(eventName, fn, context);
 		}
 		/**
