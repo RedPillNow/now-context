@@ -206,20 +206,6 @@ var Now;
                 console.warn('Listener for ' + eventName + ' with callback ', fn, ' already exists!');
             }
         }
-        onReqRes(eventName, fn, context) {
-            if (!this._listenerExists(eventName, fn, context)) {
-                let evt = this.events[eventName];
-                if (evt && evt.listeners && evt.listeners.length > 0) {
-                    console.warn('Now.PubSub: We only allow the creation of one listener for a ReqRes event. Listener not created');
-                }
-                else {
-                    this.createListener(eventName, fn, context, true);
-                }
-            }
-            else {
-                console.warn('Listener for ' + eventName + ' with callback ', fn, ' already exists!');
-            }
-        }
         createListener(eventName, fn, context, isReqRes) {
             let listener = null;
             if (isReqRes) {
@@ -298,6 +284,10 @@ var NowElements;
     class NowContext extends Polymer.Element {
         constructor() {
             super();
+            this.UPDATED_EVENT = Symbol('nowContextItemUpdated');
+            this.ADDED_EVENT = Symbol('nowContextItemAdded');
+            this.DELETED_EVENT = Symbol('nowContextItemDeleted');
+            this._store = {};
             this.globalId = 0;
             this.reqResListeners = {};
             this.pubsub = new Now.PubSub();
@@ -305,12 +295,15 @@ var NowElements;
         static get is() { return 'now-context'; }
         static get properties() {
             return {
-                store: {
+                context: {
                     type: Object,
-                    value: {},
-                    notify: true
+                    notify: true,
+                    readOnly: true
                 }
             };
+        }
+        get store() {
+            return this._store;
         }
         connectedCallback() {
             super.connectedCallback();
@@ -348,37 +341,25 @@ var NowElements;
                 if (response) {
                     let contextItem = this._createContextItem(ajaxReq, detail.idKey);
                     let contextItemKey = this._getContextKey(ajaxReq, contextItem);
-                    let isUrl = false;
-                    if ((contextItemKey && contextItemKey.indexOf) && (contextItemKey.indexOf('http:') > -1 || contextItemKey.indexOf('https:') > -1)) {
-                        isUrl = true;
-                    }
                     let existingContextItem = this.findContextItem(contextItemKey);
-                    let itemMerged = false;
+                    let evtName = this.ADDED_EVENT;
                     if (existingContextItem) {
-                        itemMerged = true;
                         contextItem = Object.assign(existingContextItem, contextItem);
+                        evtName = this.UPDATED_EVENT;
                     }
-                    let evtName = itemMerged ? 'nowContextItemUpdated' : 'nowContextItemAdded';
-                    if (!isUrl) {
-                        let path = 'store.' + contextItemKey;
-                        this.set(path, contextItem);
-                    }
-                    else {
-                        this.store[contextItemKey] = contextItem;
-                        this.notifyPath('store.*', this.store[contextItemKey]);
-                    }
+                    this.addStoreItem(contextItem, contextItemKey);
                     this.trigger(evtName, contextItem);
                     return true;
                 }
-                return false;
             }
             catch (e) {
                 return false;
             }
+            return false;
         }
         _getContextKey(ajaxReq, contextItem) {
             let contextItemKey = null;
-            if (Array.isArray(ajaxReq.response) || !contextItem.id) {
+            if (Array.isArray(ajaxReq.response) || (!contextItem.id && contextItem.idKey === 'url')) {
                 contextItemKey = ajaxReq.requestUrl;
             }
             else {
@@ -386,8 +367,50 @@ var NowElements;
             }
             return contextItemKey;
         }
+        addStoreItem(item, idKey) {
+            let contextItem = null;
+            let contextItemKey = null;
+            if (item instanceof Now.ContextItem) {
+                contextItem = item;
+            }
+            else {
+                contextItem = new Now.ContextItem();
+                contextItem.idKey = idKey;
+                contextItem.model = item;
+            }
+            let protocolRegEx = /(http:|https:){1}/;
+            if (contextItem.idKey === 'url' || protocolRegEx.test(contextItem.idKey)) {
+                if (contextItem.idKey === 'url' && contextItem.lastAjaxRequest) {
+                    contextItemKey = contextItem.lastAjaxRequest.requestUrl;
+                }
+                else {
+                    contextItemKey = contextItem.idKey;
+                    if (!contextItemKey) {
+                        contextItemKey = new Date().getTime();
+                    }
+                }
+            }
+            else {
+                contextItemKey = contextItem.id;
+            }
+            this._store[contextItemKey] = contextItem;
+            this._setContext(this.store);
+            return contextItem;
+        }
+        removeStoreItem(itemId) {
+            let contextItem = this.findContextItem(itemId);
+            if (contextItem) {
+                delete this._store[contextItem.id];
+                this._setContext(this.store);
+                this.trigger(this.DELETED_EVENT, contextItem);
+            }
+            else {
+                console.info('now-context: Store item with ID ' + itemId + ' not found. Nothing removed');
+            }
+            return contextItem;
+        }
         findContextItem(contextItemKey) {
-            let context = this.get('store');
+            let context = this.store;
             if (context.hasOwnProperty(contextItemKey)) {
                 return context[contextItemKey];
             }

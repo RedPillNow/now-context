@@ -8,7 +8,8 @@ declare namespace Now {
         private _requestUrl;
         private _status;
         private _statusText;
-        private _withCredentials;
+		private _withCredentials;
+		constructor(obj?: any);
         method: string;
         params: any;
         payload: any;
@@ -45,9 +46,10 @@ declare namespace Now {
 		private _reject;
 		private _id;
 		constructor(eventName: any, handler: any, context?: any);
+		id: string;
+		handler: any;
 		resolve: any;
 		reject: any;
-		id: string;
 	}
 	class PubSubEvent {
 		private _eventName;
@@ -62,7 +64,8 @@ declare namespace Now {
         constructor();
 		events: any;
 		history: any[];
-        on(eventName: any, fn: any, context: any): void;
+		on(eventName: any, fn: any, context: any): void;
+		private createListener(eventName: string, fn: any, context?: any, isReqRes?: boolean);
         off(eventName: any, fn: any): void;
 		trigger(eventName: any, data: any): void;
 		private _listenerExists(eventName: string, fn: any, context: any): boolean;
@@ -75,20 +78,26 @@ declare namespace NowElements {
         static readonly properties: {
             context: {
                 type: ObjectConstructor;
-                value: {};
-                notify: boolean;
+				notify: boolean;
+				readOnly: boolean;
             };
 		};
+		private readonly _store: any;
 		private pubsub: Now.PubSub;
 		private worker: Worker;
 		private globalId: number;
 		private reResListeners: any;
+		UPDATED_EVENT: any;
+		ADDED_EVENT: any;
+		DELETED_EVENT: any;
         constructor();
         connectedCallback(): void;
         disconnectedCallback(): void;
         private _createContextItem(ironRequest, ajaxRequest, idKey);
         private _updateContext(ironRequest, ajax, detail);
-        private _getContextKey(ajaxReq, contextItem);
+		private _getContextKey(ajaxReq, contextItem);
+		addStoreItem(item: any, idKey: string): Now.ContextItem;
+		removeStoreItem(itemId: string): Now.ContextItem;
 		findContextItem(contextItemKey: any): Now.ContextItem;
 		trigger(eventName: any, data);
 		on(eventName: any, fn, context);

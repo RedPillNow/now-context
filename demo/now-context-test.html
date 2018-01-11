@@ -106,15 +106,11 @@ class NowContextTest extends Polymer.Element {
 		};
 	}
 
-	constructor() {
-		super();
-	}
-
 	connectedCallback() {
 		super.connectedCallback();
 		setTimeout(() => {
-			NowContext.on('nowContextItemUpdated', this.onContextItemUpdated);
-			NowContext.on('nowContextItemAdded', this.onContextItemAdded, this);
+			NowContext.on(NowContext.UPDATED_EVENT, this.onContextItemUpdated);
+			NowContext.on(NowContext.ADDED_EVENT, this.onContextItemAdded, this);
 			NowContext.on('customEvent', this.onCustomEvent, this);
 		}, 1000);
 	}
