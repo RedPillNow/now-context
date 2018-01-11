@@ -422,10 +422,14 @@ namespace NowElements {
 	 * @author Keith Strickland <keith@redpillnow.com>
 	 */
 	export class NowContext extends Polymer.Element {
-		static get is() { return 'now-context' }
+		static get is() { return 'now-context'; }
 		static get properties() {
 			return {
-				context: {
+				/**
+				 * This is the stored context
+				 * @type {any}
+				 */
+				store: {
 					type: Object,
 					value: {},
 					notify: true
@@ -471,6 +475,8 @@ namespace NowElements {
 				this.worker = new Worker(this.resolveUrl('now-context-worker.js'));
 				(<any>this).onWorkerMsg = this._onWorkerMsg.bind(this);
 				this.worker.addEventListener('message', (<any>this).onWorkerMsg);
+			} else {
+				console.warn('now-context requires a browser that supports Web Workers! May experience erratic behavior.');
 			}
 			const loadedEvt = new CustomEvent('now-context-loaded', { detail: this });
 			document.dispatchEvent(loadedEvt);
@@ -538,13 +544,13 @@ namespace NowElements {
 					}
 					let evtName = itemMerged ? 'nowContextItemUpdated' : 'nowContextItemAdded';
 					if (!isUrl) {
-						let path = 'context.' + contextItemKey;
+						let path = 'store.' + contextItemKey;
 						this.set(path, contextItem);
 					} else {
-						(<any> this).context[contextItemKey] = contextItem;
-						this.notifyPath('context.*', (<any> this).context[contextItemKey]);
+						(<any> this).store[contextItemKey] = contextItem;
+						this.notifyPath('store.*', (<any> this).store[contextItemKey]);
 					}
-					this.triggerEvt(evtName, contextItem);
+					this.trigger(evtName, contextItem);
 					return true;
 				}
 				return false;
@@ -575,7 +581,7 @@ namespace NowElements {
 		 * @returns {Now.ContextItem}
 		 */
 		findContextItem(contextItemKey): Now.ContextItem {
-			let context = this.get('context');
+			let context = this.get('store');
 			if (context.hasOwnProperty(contextItemKey)) {
 				return context[contextItemKey];
 			}
@@ -587,35 +593,27 @@ namespace NowElements {
 		 * @param {any} data
 		 * @returns {any | Promise}
 		 */
-		triggerEvt(eventName: any, data: any) {
+		trigger(eventName: any, data: any) {
 			return this.pubsub.trigger(eventName, data);
 		}
 		/**
-		 * Subscribe to pubsub events
+		 * Subscribe to pubsub and reqres events
 		 *
 		 * @param {string | Symbol} eventName The name of the event to listen for
 		 * @param {function} fn The callback function
 		 * @param {any} context The context in which to run the callback
 		 */
-		listenEvt(eventName: any, fn: any, context?: any) {
+		on(eventName: any, fn: any, context: any) {
 			return this.pubsub.on(eventName, fn, context);
 		}
 		/**
 		 * Un-Subscribe from an event
 		 * @param {string | Symbol} eventName
 		 * @param {function} fn The callback for the event
+		 * @deprecated - renamed to off
 		 */
-		unListenEvt(eventName: any, fn) {
+		off(eventName: any, fn) {
 			this.pubsub.off(eventName, fn);
-		}
-		/**
-		 * Create a reqres listener. This should return the value of the via a Promise in the callback function
-		 * @param {string | Symbol} eventName
-		 * @param {*} fn - This should return a promise with the appropriate value in the resolve
-		 * @param {*} [context]
-		 */
-		createReqRes(eventName: any, fn: any, context?: any) {
-			this.pubsub.onReqRes(eventName, fn, context);
 		}
 		/**
 		 * A request response function. This is mainly used for doing an ajax
@@ -628,9 +626,10 @@ namespace NowElements {
 		 * @property {any} payload.ajax.payload If doing something other than a GET this is the payload to send to the server
 		 * @property {any} payload.ajax.params The url parameters
 		 * @property {string} payload.ajax.responseType
+		 * @property {string} payload.idKey The key in the model which is the ID
 		 * @returns {Promise}
 		 */
-		reqres(payload) {
+		fetch(payload) {
 			return this._sendWorkerMsg(payload);
 		}
 		/**
@@ -678,9 +677,14 @@ namespace NowElements {
 				let ajaxReq: Now.AjaxRequest = new Now.AjaxRequest(data.ajaxReq);
 				this._updateContext(ajaxReq, { idKey: data.idKey });
 				let listener = this.reqResListeners[data.id];
-				listener.resolve(ajaxReq);
+				if (listener) {
+					listener.resolve(ajaxReq);
+				} else {
+					throw new Error('Unable to complete request, unable to find Listener with ID ' + data.id);
+				}
 			} catch (err) {
 				this.reqResListeners[data.id].reject(err);
+				console.error(err);
 			}
 			delete this.reqResListeners[data.id];
 		}

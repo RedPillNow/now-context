@@ -305,7 +305,7 @@ var NowElements;
         static get is() { return 'now-context'; }
         static get properties() {
             return {
-                context: {
+                store: {
                     type: Object,
                     value: {},
                     notify: true
@@ -319,6 +319,9 @@ var NowElements;
                 this.worker = new Worker(this.resolveUrl('now-context-worker.js'));
                 this.onWorkerMsg = this._onWorkerMsg.bind(this);
                 this.worker.addEventListener('message', this.onWorkerMsg);
+            }
+            else {
+                console.warn('now-context requires a browser that supports Web Workers! May experience erratic behavior.');
             }
             const loadedEvt = new CustomEvent('now-context-loaded', { detail: this });
             document.dispatchEvent(loadedEvt);
@@ -357,14 +360,14 @@ var NowElements;
                     }
                     let evtName = itemMerged ? 'nowContextItemUpdated' : 'nowContextItemAdded';
                     if (!isUrl) {
-                        let path = 'context.' + contextItemKey;
+                        let path = 'store.' + contextItemKey;
                         this.set(path, contextItem);
                     }
                     else {
-                        this.context[contextItemKey] = contextItem;
-                        this.notifyPath('context.*', this.context[contextItemKey]);
+                        this.store[contextItemKey] = contextItem;
+                        this.notifyPath('store.*', this.store[contextItemKey]);
                     }
-                    this.triggerEvt(evtName, contextItem);
+                    this.trigger(evtName, contextItem);
                     return true;
                 }
                 return false;
@@ -384,25 +387,22 @@ var NowElements;
             return contextItemKey;
         }
         findContextItem(contextItemKey) {
-            let context = this.get('context');
+            let context = this.get('store');
             if (context.hasOwnProperty(contextItemKey)) {
                 return context[contextItemKey];
             }
             return null;
         }
-        triggerEvt(eventName, data) {
+        trigger(eventName, data) {
             return this.pubsub.trigger(eventName, data);
         }
-        listenEvt(eventName, fn, context) {
+        on(eventName, fn, context) {
             return this.pubsub.on(eventName, fn, context);
         }
-        unListenEvt(eventName, fn) {
+        off(eventName, fn) {
             this.pubsub.off(eventName, fn);
         }
-        createReqRes(eventName, fn, context) {
-            this.pubsub.onReqRes(eventName, fn, context);
-        }
-        reqres(payload) {
+        fetch(payload) {
             return this._sendWorkerMsg(payload);
         }
         _sendWorkerMsg(payload) {
@@ -427,10 +427,16 @@ var NowElements;
                 let ajaxReq = new Now.AjaxRequest(data.ajaxReq);
                 this._updateContext(ajaxReq, { idKey: data.idKey });
                 let listener = this.reqResListeners[data.id];
-                listener.resolve(ajaxReq);
+                if (listener) {
+                    listener.resolve(ajaxReq);
+                }
+                else {
+                    throw new Error('Unable to complete request, unable to find Listener with ID ' + data.id);
+                }
             }
             catch (err) {
                 this.reqResListeners[data.id].reject(err);
+                console.error(err);
             }
             delete this.reqResListeners[data.id];
         }

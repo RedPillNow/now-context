@@ -31,7 +31,7 @@ class CustomApp extends Polymer.Element {
 	connectedCallback() {
 		// Give now-context time to be initialized
 		setTimeout(() => {
-			NowContext.listenEvt('someEvent', this.onEvt, this);
+			NowContext.on('someEvent', this.onEvt, this);
 		}, 1000);
 	}
 	/**
@@ -46,7 +46,7 @@ class CustomApp extends Polymer.Element {
 			},
 			idKey: '@id'
 		};
-		NowContext.reqres(detailObj)
+		NowContext.fetch(detailObj)
 			.then((ajaxRequest) => {
 				// Do Something....
 			});
@@ -58,7 +58,7 @@ class CustomApp extends Polymer.Element {
 	}
 
 	triggerSomeEvt() {
-		NowContext.triggerEvt('someEvent', this.someData);
+		NowContext.trigger('someEvent', this.someData);
 	}
 }
 	</script>
@@ -86,10 +86,10 @@ Once the context is updated with a new item, or an existing item is updated a ne
 
 There are 4 methods to work with the PubSub system:
 
-* `NowContext.listenEvt(eventName, callback, context)` - This is how you subscribe to an event
-* `NowContext.triggerEvt(eventName, data)` - This is how you trigger an event
-* `NowContext.unListenEvt(eventName, callback)` - This is how you un-subscribe from an event
-* `NowContext.reqres(payload)` - This is how you make an ajax request. See above for format of payload. This will return a Promise with the ajax request data included as an argument
+* `NowContext.on(eventName, callback, context)` - This is how you subscribe to an event
+* `NowContext.trigger(eventName, data)` - This is how you trigger an event
+* `NowContext.off(eventName, callback)` - This is how you un-subscribe from an event
+* `NowContext.fetch(payload)` - This is how you make an ajax request. See above for format of payload. This will return a Promise with the ajax request data included as an argument
 
 When an event is triggered, it will run the callback function for all subscribed listeners. While we attempt to prevent duplicate listeners, if a context is not provided to `listenEvt` it is possible to end up with duplicate listeners. While this will not cause a memory leak it will cause your callback to be called twice. Also the order of running callbacks is not guaranteed to happen in any particular order.
 

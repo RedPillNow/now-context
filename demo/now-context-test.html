@@ -52,7 +52,7 @@
 			</div>
 		</div>
 		<div>
-			<p>In order to access the context there is a global variable called "NowContext.context". This will be the context object which contains all the responses (that were different).</p>
+			<p>In order to access the context there is a global variable called "NowContext.store". This will be the context object which contains all the responses (that were different).</p>
 			<p>If an item does not have an id (for example the response was an array) then the url will be the key, otherwise the id is the key.</p>
 			<p class="note">Open the console to see relevant messages</p>
 		<div id="contextDisplay">
@@ -113,9 +113,9 @@ class NowContextTest extends Polymer.Element {
 	connectedCallback() {
 		super.connectedCallback();
 		setTimeout(() => {
-			NowContext.listenEvt('nowContextItemUpdated', this.onContextItemUpdated);
-			NowContext.listenEvt('nowContextItemAdded', this.onContextItemAdded, this);
-			NowContext.listenEvt('customEvent', this.onCustomEvent, this);
+			NowContext.on('nowContextItemUpdated', this.onContextItemUpdated);
+			NowContext.on('nowContextItemAdded', this.onContextItemAdded, this);
+			NowContext.on('customEvent', this.onCustomEvent, this);
 		}, 1000);
 	}
 
@@ -138,7 +138,7 @@ class NowContextTest extends Polymer.Element {
 
 	getNext(evt, detail) {
 		this.count++;
-		NowContext.reqres(this.getReqResPayload())
+		NowContext.fetch(this.getReqResPayload())
 			.then((ajaxReq) => {
 				this.getReqCount++;
 			});
@@ -146,7 +146,7 @@ class NowContextTest extends Polymer.Element {
 
 	getSame(evt, detail) {
 		if (this.count > 0) {
-			NowContext.reqres(this.getReqResPayload())
+			NowContext.fetch(this.getReqResPayload())
 				.then((ajaxReq) => {
 					this.getReqCount++;
 				});
@@ -172,7 +172,7 @@ class NowContextTest extends Polymer.Element {
 			},
 			idKey: 'url'
 		}
-		NowContext.reqres(payload)
+		NowContext.fetch(payload)
 			.then((ajaxReq) => {
 				this.getReqCount++;
 			});
@@ -188,7 +188,7 @@ class NowContextTest extends Polymer.Element {
 	}
 
 	triggerEvent(evt) {
-		NowContext.triggerEvt('customEvent');
+		NowContext.trigger('customEvent');
 	}
 
 	onCustomEvent(data) {
