@@ -83,15 +83,15 @@ let detailObj {
 There are 4 events which now-context emits:
 
 * `document.now-context-loaded` - Fired when the now-context element is available
-* `nowContextItemUpdated` - This is a [Symbol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol) and is accessible via the `NowContext.UPDATED_EVENT` property
-* `nowContextItemAdded` - This is a Symbol and is accessible via the `NowContext.ADDED_EVENT` property
-* `nowContextItemDeleted` - This is a Symbol and is accessible via the `NowContext.DELETED_EVENT` property
+* `nowContextItemUpdated` - This is a [Symbol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol) and is accessible via the `NowContext.UPDATED_EVENT` property. This is fired when a context item in the store is updated (not added)
+* `nowContextItemAdded` - This is a Symbol and is accessible via the `NowContext.ADDED_EVENT` property. This is fired when a context item is added to the store
+* `nowContextItemDeleted` - This is a Symbol and is accessible via the `NowContext.DELETED_EVENT` property. This is fired when a context item is removed from the store
 
 ## PubSub System
 
 There are 4 methods to work with the PubSub system:
 
-* `NowContext.on(eventName, callback, context)` - This is how you subscribe to an event
+* `NowContext.on(eventName, callback, context)` - This is how you subscribe to an event. For PubSub, whatever wants listen to an event. For Request/Response this would be whatever is responding to an event. If creating a Request/Response listener, the callback **MUST** return a Promise.
 * `NowContext.trigger(eventName, data)` - This is how you trigger an event
 * `NowContext.off(eventName, callback)` - This is how you un-subscribe from an event
 * `NowContext.fetch(payload)` - This is how you make an ajax request. See above for format of payload. This will return a Promise with the ajax request data included as an argument
