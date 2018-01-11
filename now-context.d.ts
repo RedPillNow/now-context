@@ -90,10 +90,10 @@ declare namespace NowElements {
         private _updateContext(ironRequest, ajax, detail);
         private _getContextKey(ajaxReq, contextItem);
 		findContextItem(contextItemKey: any): Now.ContextItem;
-		triggerEvt(eventName: any, data);
-		listenEvt(eventName: any, fn, context);
-		unListenEvt(eventName: any, fn);
-		reqres(payload);
+		trigger(eventName: any, data);
+		on(eventName: any, fn, context);
+		off(eventName: any, fn);
+		fetch(payload);
 		private _sendWorkerMsg(payload);
 		private _onWorkerMsg(evt: MessageEvent);
 
