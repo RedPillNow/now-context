@@ -78,9 +78,14 @@ let detailObj {
 }
 ```
 
-Once the context is updated with a new item, or an existing item is updated a new PubSub event will be triggered:
-* Context Item is updated - nowContextItemUpdated
-* Context Item is added - nowContextItemAdded
+## Events
+
+There are 4 events which now-context emits:
+
+`document.now-context-loaded` - Fired when the now-context element is available
+`nowContextItemUpdated` - This is a [Symbol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol) and is accessible via the `NowContext.UPDATED_EVENT` property
+`nowContextItemAdded` - This is a Symbol and is accessible via the `NowContext.ADDED_EVENT` property
+`nowContextItemDeleted` - This is a Symbol and is accessible via the `NowContext.DELETED_EVENT` property
 
 ## PubSub System
 
