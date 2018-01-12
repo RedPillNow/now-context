@@ -15,7 +15,8 @@
 		"sourceMap": true,
 		"experimentalDecorators": true,
 		"listFiles": true,
-		"noEmitOnError": true
+		"noEmitOnError": true,
+		"declaration": true
 	},
 	"exclude": [
 		"node_modules/**/*.*",

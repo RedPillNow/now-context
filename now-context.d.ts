@@ -8,8 +8,8 @@ declare namespace Now {
         private _requestUrl;
         private _status;
         private _statusText;
-		private _withCredentials;
-		constructor(obj?: any);
+        private _withCredentials;
+        constructor(obj?: any);
         method: string;
         params: any;
         payload: any;
@@ -34,42 +34,43 @@ declare namespace Now {
     }
     class PubSubListener {
         private _eventName;
-        private _handler;
+        protected _handler: any;
         private _context;
         constructor(eventName: any, handler: any, context?: any);
-        eventName: any;
+        eventName: string | Symbol;
         handler: any;
         context: any;
-	}
-	class ReqResListener extends PubSubListener {
-		private _resolve;
-		private _reject;
-		private _id;
-		constructor(eventName: any, handler: any, context?: any);
-		id: string;
-		handler: any;
-		resolve: any;
-		reject: any;
-	}
-	class PubSubEvent {
-		private _eventName;
-		private _listeners;
-		constructor()
-		eventName: any;
-		listeners: Now.PubSubListener[];
-	}
+    }
+    class ReqResListener extends PubSubListener {
+        private _resolve;
+        private _reject;
+        private _id;
+        protected _handler: any;
+        constructor(eventName: any, handler: any, context?: any);
+        id: number;
+        handler: any;
+        resolve: any;
+        reject: any;
+    }
+    class PubSubEvent {
+        private _eventName;
+        private _listeners;
+        constructor(eventName?: any);
+        eventName: string | Symbol;
+        listeners: PubSubListener[];
+    }
     class PubSub {
-		private _events;
-		private _history;
+        private _events;
+        private _history;
         constructor();
-		events: any;
-		history: any[];
-		on(eventName: any, fn: any, context: any): void;
-		private createListener(eventName: string, fn: any, context?: any, isReqRes?: boolean);
+        events: any;
+        history: any[];
+        on(eventName: any, fn: any, context: any): void;
+        private createListener(eventName, fn, context?, isReqRes?);
         off(eventName: any, fn: any): void;
-		trigger(eventName: any, data: any): void;
-		private _listenerExists(eventName: string, fn: any, context: any): boolean;
-		private _updateHistory(eventName: string, listeners: any[]);
+        trigger(eventName: any, data: any): void;
+        private _listenerExists(eventName, fn, context);
+        private _updateHistory(eventName, listeners);
     }
 }
 declare namespace NowElements {
@@ -78,33 +79,33 @@ declare namespace NowElements {
         static readonly properties: {
             context: {
                 type: ObjectConstructor;
-				notify: boolean;
-				readOnly: boolean;
+                notify: boolean;
+                readOnly: boolean;
             };
-		};
-		private readonly _store: any;
-		private pubsub: Now.PubSub;
-		private worker: Worker;
-		private globalId: number;
-		private reResListeners: any;
-		UPDATED_EVENT: any;
-		ADDED_EVENT: any;
-		DELETED_EVENT: any;
+        };
+        readonly store: any;
+        UPDATED_EVENT: symbol;
+        ADDED_EVENT: symbol;
+        DELETED_EVENT: symbol;
+        private _store;
+        private pubsub;
+        private worker;
+        private globalId;
+        private reqResListeners;
         constructor();
         connectedCallback(): void;
         disconnectedCallback(): void;
-        private _createContextItem(ironRequest, ajaxRequest, idKey);
-        private _updateContext(ironRequest, ajax, detail);
-		private _getContextKey(ajaxReq, contextItem);
-		addStoreItem(item: any, idKey: string): Now.ContextItem;
-		removeStoreItem(itemId: string): Now.ContextItem;
-		findContextItem(contextItemKey: any): Now.ContextItem;
-		trigger(eventName: any, data);
-		on(eventName: any, fn, context);
-		off(eventName: any, fn);
-		fetch(payload);
-		private _sendWorkerMsg(payload);
-		private _onWorkerMsg(evt: MessageEvent);
-
+        private _createContextItem(ajaxRequest, idKey);
+        private _updateContext(ajaxReq, detail);
+        private _getContextKey(ajaxReq, contextItem);
+        addStoreItem(item: any, idKey: any): Now.ContextItem;
+        removeStoreItem(itemId: any): Now.ContextItem;
+        findContextItem(contextItemKey: any): Now.ContextItem;
+        trigger(eventName: any, data: any): void;
+        on(eventName: any, fn: any, context: any): void;
+        off(eventName: any, fn: any): void;
+        fetch(payload: any): Promise<{}>;
+        private _sendWorkerMsg(payload);
+        private _onWorkerMsg(evt);
     }
 }
