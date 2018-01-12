@@ -721,7 +721,10 @@ namespace NowElements {
 					throw new Error('Unable to complete request, unable to find Listener with ID ' + data.id);
 				}
 			} catch (err) {
-				this.reqResListeners[data.id].reject(err);
+				let listener = this.reqResListeners[data.id];
+				if (listener) {
+					listener.reject(err);
+				}
 				console.error(err);
 			}
 			delete this.reqResListeners[data.id];
