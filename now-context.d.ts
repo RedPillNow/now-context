@@ -70,7 +70,7 @@ declare namespace Now {
         off(eventName: any, fn: any): void;
         trigger(eventName: any, data: any): void;
         private _listenerExists(eventName, fn, context);
-        private _updateHistory(eventName, listeners);
+        private _updateHistory(eventName, listeners, data);
     }
 }
 declare namespace NowElements {

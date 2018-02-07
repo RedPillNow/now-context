@@ -352,7 +352,7 @@ namespace Now {
 					}
 				});
 			}
-			this._updateHistory(eventName, executedListeners);
+			this._updateHistory(eventName, executedListeners, data);
 			return returnVal;
 		}
 		/**
@@ -381,12 +381,13 @@ namespace Now {
 		 * @param {any} eventName
 		 * @param {any} listeners listeners that were serviced
 		 */
-		private _updateHistory(eventName: any, listeners): void {
+		private _updateHistory(eventName: any, listeners: PubSubListener[], data: any): void {
 			let dispatchedEvts = this.history;
 			let evtObj = {
 				time: new Date(),
 				eventName: eventName,
-				listeners: listeners
+				listeners: listeners,
+				payload: data
 			}
 			dispatchedEvts.push(evtObj);
 			this.history = dispatchedEvts;

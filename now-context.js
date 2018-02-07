@@ -251,7 +251,7 @@ var Now;
                     }
                 });
             }
-            this._updateHistory(eventName, executedListeners);
+            this._updateHistory(eventName, executedListeners, data);
             return returnVal;
         }
         _listenerExists(eventName, fn, context) {
@@ -266,12 +266,13 @@ var Now;
             }
             return false;
         }
-        _updateHistory(eventName, listeners) {
+        _updateHistory(eventName, listeners, data) {
             let dispatchedEvts = this.history;
             let evtObj = {
                 time: new Date(),
                 eventName: eventName,
-                listeners: listeners
+                listeners: listeners,
+                payload: data
             };
             dispatchedEvts.push(evtObj);
             this.history = dispatchedEvts;
@@ -458,7 +459,10 @@ var NowElements;
                 }
             }
             catch (err) {
-                this.reqResListeners[data.id].reject(err);
+                let listener = this.reqResListeners[data.id];
+                if (listener) {
+                    listener.reject(err);
+                }
                 console.error(err);
             }
             delete this.reqResListeners[data.id];
