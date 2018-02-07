@@ -379,7 +379,8 @@ namespace Now {
 		 * Update the history object
 		 * @private
 		 * @param {any} eventName
-		 * @param {any} listeners listeners that were serviced
+		 * @param {PubSubListener[]} listeners listeners that were serviced
+		 * @param {any} data The data object from the trigger
 		 */
 		private _updateHistory(eventName: any, listeners: PubSubListener[], data: any): void {
 			let dispatchedEvts = this.history;
