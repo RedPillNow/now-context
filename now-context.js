@@ -293,15 +293,8 @@ var NowElements;
             this.reqResListeners = {};
             this.pubsub = new Now.PubSub();
         }
-        static get is() { return 'now-context'; }
-        static get properties() {
-            return {
-                context: {
-                    type: Object,
-                    notify: true,
-                    readOnly: true
-                }
-            };
+        get is() {
+            return NowContext.is;
         }
         get store() {
             return this._store;
@@ -315,7 +308,7 @@ var NowElements;
                 this.worker.addEventListener('message', this.onWorkerMsg);
             }
             else {
-                console.warn('now-context requires a browser that supports Web Workers! May experience erratic behavior.');
+                console.warn('now-context requires a browser that supports Web Workers! You may experience erratic and undependable behavior of this element.');
             }
             const loadedEvt = new CustomEvent('now-context-loaded', { detail: this });
             document.dispatchEvent(loadedEvt);
@@ -468,6 +461,14 @@ var NowElements;
             delete this.reqResListeners[data.id];
         }
     }
+    NowContext.is = 'now-context';
+    NowContext.properties = {
+        context: {
+            type: Object,
+            notify: true,
+            readOnly: true
+        }
+    };
     NowElements.NowContext = NowContext;
 })(NowElements || (NowElements = {}));
 customElements.define(NowElements.NowContext.is, NowElements.NowContext);

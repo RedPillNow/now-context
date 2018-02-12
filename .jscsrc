@@ -20,9 +20,8 @@
 	"safeContextKeyword": "that",
 	"maxErrors": 500,
 	"excludeFiles": [
-		"IncidentTrackingNSF/**",
-		"Gruntfile.js",
 		"node_modules/**",
-		"src/lib/**"
+		"bower_components/**",
+		"*.js"
 	]
 }

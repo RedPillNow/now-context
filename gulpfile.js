@@ -25,7 +25,6 @@ var glob = require('glob-all');
 var historyApiFallback = require('connect-history-api-fallback');
 var packageJson = require('./package.json');
 var crypto = require('crypto');
-var ensureFiles = require('./gulp-tasks/ensure-files.js');
 var props = require('properties');
 var url = require('url');
 var proxy = require('proxy-middleware');
@@ -216,7 +215,7 @@ gulp.task('serve', ['typescript', 'getBuildProperties'], function() {
 gulp.task('default', ['clean'], function(cb) {
 	runSequence(
 		['typescript'],
-		// ['ensureFiles', 'copy', 'styles'],
+		// ['copy', 'styles'],
 		// ['images', 'fonts'],
 		cb);
 });

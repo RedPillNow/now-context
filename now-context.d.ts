@@ -75,14 +75,15 @@ declare namespace Now {
 }
 declare namespace NowElements {
     class NowContext extends Polymer.Element {
-        static readonly is: string;
-        static readonly properties: {
+        static is: string;
+        static properties: {
             context: {
                 type: ObjectConstructor;
                 notify: boolean;
                 readOnly: boolean;
             };
         };
+        readonly is: string;
         readonly store: any;
         UPDATED_EVENT: symbol;
         ADDED_EVENT: symbol;
@@ -98,7 +99,7 @@ declare namespace NowElements {
         private _createContextItem(ajaxRequest, idKey);
         private _updateContext(ajaxReq, detail);
         private _getContextKey(ajaxReq, contextItem);
-        addStoreItem(item: any, idKey: any): Now.ContextItem;
+        addStoreItem(item: any, idKey: string): Now.ContextItem;
         removeStoreItem(itemId: any): Now.ContextItem;
         findContextItem(contextItemKey: any): Now.ContextItem;
         trigger(eventName: any, data: any): void;

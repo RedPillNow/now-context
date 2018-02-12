@@ -331,7 +331,7 @@ namespace Now {
 		/**
 		 * Trigger an event
 		 * @param {any} eventName
-		 * @param {any} data
+		 * @param {any} data will be passed to the listeners of the event
 		 */
 		trigger(eventName: any, data): void {
 			let executedListeners = [];
@@ -401,25 +401,29 @@ namespace NowElements {
 	/**
 	 * Manage the context of an application. All XHR requests should pass through this element and it
 	 * will keep track of all requests and store them in the context object. This element also provides
-	 * a very simple PubSub system.
+	 * a very simple PubSub and Request/Response system.
 	 *
 	 * @author Keith Strickland <keith@redpillnow.com>
 	 */
 	export class NowContext extends Polymer.Element {
-		static get is() { return 'now-context'; }
-		static get properties() {
-			return {
-				/**
-				 * This is the stored context to allow data-binding
-				 * @type {any}
-				 * @readonly
-				 */
-				context: {
-					type: Object,
-					notify: true,
-					readOnly: true
-				}
+		static is: string = 'now-context';
+		static properties = {
+			/**
+			 * This is the stored context to allow data-binding
+			 * @type {any}
+			 * @readonly
+			 */
+			context: {
+				type: Object,
+				notify: true,
+				readOnly: true
 			}
+		}
+		/**
+		 * This is mainly for identification and troubleshooting
+		 */
+		get is() {
+			return NowContext.is;
 		}
 		/**
 		 * This is the stored context
@@ -478,7 +482,7 @@ namespace NowElements {
 				(<any>this).onWorkerMsg = this._onWorkerMsg.bind(this);
 				this.worker.addEventListener('message', (<any>this).onWorkerMsg);
 			} else {
-				console.warn('now-context requires a browser that supports Web Workers! May experience erratic behavior.');
+				console.warn('now-context requires a browser that supports Web Workers! You may experience erratic and undependable behavior of this element.');
 			}
 			const loadedEvt = new CustomEvent('now-context-loaded', { detail: this });
 			document.dispatchEvent(loadedEvt);
@@ -571,7 +575,7 @@ namespace NowElements {
 		 * @param {any} idKey
 		 * @returns {Now.ContextItem} Item added/updated
 		 */
-		addStoreItem(item, idKey): Now.ContextItem {
+		addStoreItem(item: any, idKey: string): Now.ContextItem {
 			let contextItem = null;
 			let contextItemKey = null;
 			if (item instanceof Now.ContextItem) {
@@ -595,6 +599,7 @@ namespace NowElements {
 				contextItemKey = contextItem.id;
 			}
 			this._store[contextItemKey] = contextItem;
+			// The _setContext method is part of Polymer: bower_components/Polymer/lib/mixins/property-effects.html
 			(<any>this)._setContext(this.store);
 			return contextItem;
 		}
@@ -607,6 +612,7 @@ namespace NowElements {
 			let contextItem = this.findContextItem(itemId);
 			if (contextItem) {
 				delete this._store[contextItem.id];
+				// The _setContext method is part of Polymer: bower_components/Polymer/lib/mixins/property-effects.html
 				(<any>this)._setContext(this.store);
 				this.trigger(this.DELETED_EVENT, contextItem);
 			} else {
