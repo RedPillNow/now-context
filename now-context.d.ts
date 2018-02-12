@@ -74,6 +74,19 @@ declare namespace Now {
     }
 }
 declare namespace NowElements {
+    type ReqResFetchAjaxConfig = {
+        method: string;
+        params?: any;
+        payload?: any;
+        url: string;
+        responseType?: string;
+        withCredentials?: boolean;
+    };
+    type ReqResFetchConfig = {
+        id?: string | number;
+        idKey: string;
+        ajax: ReqResFetchAjaxConfig;
+    };
     class NowContext extends Polymer.Element {
         static is: string;
         static properties: {
