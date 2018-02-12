@@ -397,6 +397,73 @@ namespace Now {
 }
 
 namespace NowElements {
+	/**
+	 * Type representing the properties to set on a Now.AjaxRequest provided by
+	 * now-context
+	 */
+	export type ReqResFetchAjaxConfig = {
+		/**
+		 * The XHR Method type
+		 * @type {string}
+		 */
+		method: string;
+		/**
+		 * The parameters to pass along in the URL
+		 * @type {any}
+		 */
+		params?: any;
+		/**
+		 * The payload for a PUT,POST,DELETE or PATCH
+		 * @type {any}
+		 */
+		payload?: any;
+		/**
+		 * The URL for the request
+		 * @type {string}
+		 */
+		url: string;
+		/**
+		 * The response type
+		 * @type {string}
+		 */
+		responseType?: string;
+		/**
+		 * True if authentication header is present
+		 * @type {boolean}
+		 */
+		withCredentials?: boolean;
+	};
+	/**
+	 * Type representing the properties to set when making a fetch from now-context
+	 * @example
+	 * let config: ReqResFetchConfig = {
+	 * 	id: 1,
+	 * 	idKey: 'id',
+	 * 	ajax: {
+	 * 		method: 'GET',
+	 * 		url: 'http://somehost.com/api/1'
+	 * 	}
+	 * }
+	 * NowContext.fetch(config).then((ajaxRequest) => {//...});
+	 */
+	export type ReqResFetchConfig = {
+		/**
+		 * The ID of the item
+		 * @type {(string | number)}
+		 */
+		id?: string | number;
+		/**
+		 * The property name in the fetched object that is the identifier
+		 * @type {string}
+		 */
+		idKey: string;
+		/**
+		 * The ajax configuration
+		 * @type {NowElements.ReqResFetchAjaxConfig}
+		 */
+		ajax: ReqResFetchAjaxConfig;
+	};
+
 	declare var window;
 	/**
 	 * Manage the context of an application. All XHR requests should pass through this element and it
@@ -419,6 +486,7 @@ namespace NowElements {
 				readOnly: true
 			}
 		}
+
 		/**
 		 * This is mainly for identification and troubleshooting
 		 */
