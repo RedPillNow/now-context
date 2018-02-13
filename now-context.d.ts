@@ -73,6 +73,7 @@ declare namespace Now {
         private _updateHistory(eventName, listeners, data);
     }
 }
+declare const customElement: typeof Polymer.decorators.customElement, property: typeof Polymer.decorators.property;
 declare namespace NowElements {
     type ReqResFetchAjaxConfig = {
         method: string;
@@ -89,13 +90,7 @@ declare namespace NowElements {
     };
     class NowContext extends Polymer.Element {
         static is: string;
-        static properties: {
-            context: {
-                type: ObjectConstructor;
-                notify: boolean;
-                readOnly: boolean;
-            };
-        };
+        context: any;
         readonly is: string;
         readonly store: any;
         UPDATED_EVENT: symbol;
@@ -115,10 +110,10 @@ declare namespace NowElements {
         addStoreItem(item: any, idKey: string): Now.ContextItem;
         removeStoreItem(itemId: any): Now.ContextItem;
         findContextItem(contextItemKey: any): Now.ContextItem;
-        trigger(eventName: any, data: any): void;
+        trigger(eventName: any, data: any): any;
         on(eventName: any, fn: any, context: any): void;
         off(eventName: any, fn: any): void;
-        fetch(payload: any): Promise<{}>;
+        fetch(payload: any): any;
         private _sendWorkerMsg(payload);
         private _onWorkerMsg(evt);
     }

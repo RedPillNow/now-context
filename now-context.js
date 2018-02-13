@@ -1,3 +1,9 @@
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
 var Now;
 (function (Now) {
     class AjaxRequest {
@@ -280,9 +286,10 @@ var Now;
     }
     Now.PubSub = PubSub;
 })(Now || (Now = {}));
+const { customElement, property } = Polymer.decorators;
 var NowElements;
 (function (NowElements) {
-    class NowContext extends Polymer.Element {
+    let NowContext = NowContext_1 = class NowContext extends Polymer.Element {
         constructor() {
             super();
             this.UPDATED_EVENT = Symbol('nowContextItemUpdated');
@@ -294,7 +301,7 @@ var NowElements;
             this.pubsub = new Now.PubSub();
         }
         get is() {
-            return NowContext.is;
+            return NowContext_1.is;
         }
         get store() {
             return this._store;
@@ -414,7 +421,7 @@ var NowElements;
             return this.pubsub.trigger(eventName, data);
         }
         on(eventName, fn, context) {
-            return this.pubsub.on(eventName, fn, context);
+            this.pubsub.on(eventName, fn, context);
         }
         off(eventName, fn) {
             this.pubsub.off(eventName, fn);
@@ -460,16 +467,20 @@ var NowElements;
             }
             delete this.reqResListeners[data.id];
         }
-    }
+    };
     NowContext.is = 'now-context';
-    NowContext.properties = {
-        context: {
+    __decorate([
+        property({
             type: Object,
             notify: true,
             readOnly: true
-        }
-    };
+        })
+    ], NowContext.prototype, "context", void 0);
+    NowContext = NowContext_1 = __decorate([
+        customElement('now-context')
+    ], NowContext);
     NowElements.NowContext = NowContext;
+    var NowContext_1;
 })(NowElements || (NowElements = {}));
 customElements.define(NowElements.NowContext.is, NowElements.NowContext);
 

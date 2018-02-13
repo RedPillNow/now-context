@@ -396,6 +396,7 @@ namespace Now {
 	}
 }
 
+const {customElement, property} = Polymer.decorators;
 namespace NowElements {
 	/**
 	 * Type representing the properties to set on a Now.AjaxRequest provided by
@@ -472,20 +473,20 @@ namespace NowElements {
 	 *
 	 * @author Keith Strickland <keith@redpillnow.com>
 	 */
+	@customElement('now-context')
 	export class NowContext extends Polymer.Element {
 		static is: string = 'now-context';
-		static properties = {
-			/**
-			 * This is the stored context to allow data-binding
-			 * @type {any}
-			 * @readonly
-			 */
-			context: {
-				type: Object,
-				notify: true,
-				readOnly: true
-			}
-		}
+		/**
+		 * This is the stored context to allow data-binding
+		 * @type {any}
+		 * @readonly
+		 */
+		@property({
+			type: Object,
+			notify: true,
+			readOnly: true
+		})
+		context: any;
 
 		/**
 		 * This is mainly for identification and troubleshooting
@@ -600,7 +601,7 @@ namespace NowElements {
 		 * @event nowContextItemAdded
 		 * @returns {boolean}
 		 */
-		private _updateContext(ajaxReq: Now.AjaxRequest, detail: any) {
+		private _updateContext(ajaxReq: Now.AjaxRequest, detail: any): boolean {
 			try {
 				let response = ajaxReq.response;
 				if (response) {
@@ -628,7 +629,7 @@ namespace NowElements {
 		 * @param {Now.ContextItem} contextItem
 		 * @returns {string}
 		 */
-		private _getContextKey(ajaxReq: Now.AjaxRequest, contextItem: Now.ContextItem) {
+		private _getContextKey(ajaxReq: Now.AjaxRequest, contextItem: Now.ContextItem): string {
 			let contextItemKey = null;
 			if (Array.isArray(ajaxReq.response) || (!contextItem.id && contextItem.idKey === 'url')) {
 				contextItemKey = ajaxReq.requestUrl;
@@ -707,7 +708,7 @@ namespace NowElements {
 		 * @param {any} data
 		 * @returns {any | Promise}
 		 */
-		trigger(eventName: any, data: any) {
+		trigger(eventName: any, data: any): any {
 			return this.pubsub.trigger(eventName, data);
 		}
 		/**
@@ -718,13 +719,12 @@ namespace NowElements {
 		 * @param {any} context The context in which to run the callback
 		 */
 		on(eventName: any, fn: any, context: any) {
-			return this.pubsub.on(eventName, fn, context);
+			this.pubsub.on(eventName, fn, context);
 		}
 		/**
 		 * Un-Subscribe from an event
 		 * @param {string | Symbol} eventName
 		 * @param {function} fn The callback for the event
-		 * @deprecated - renamed to off
 		 */
 		off(eventName: any, fn) {
 			this.pubsub.off(eventName, fn);
@@ -743,7 +743,7 @@ namespace NowElements {
 		 * @property {string} payload.idKey The key in the model which is the ID
 		 * @returns {Promise}
 		 */
-		fetch(payload) {
+		fetch(payload): any {
 			return this._sendWorkerMsg(payload);
 		}
 		/**
@@ -760,7 +760,7 @@ namespace NowElements {
 		 * @property {string} payload.ajax.responseType
 		 * @returns {Promise}
 		 */
-		private _sendWorkerMsg(payload) {
+		private _sendWorkerMsg(payload): any {
 			const msgId = this.globalId++;
 			let listener: Now.ReqResListener = new Now.ReqResListener('reqRes' + msgId, null);
 			listener.id = msgId;

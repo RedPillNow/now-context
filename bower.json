@@ -4,7 +4,7 @@
   "description": "Manage the context of an application. All XHR requests should pass through this element",
   "main": "now-context.html",
   "dependencies": {
-    "polymer": "Polymer/polymer#master"
+    "polymer": "Polymer/polymer#^2.5.0"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^2.0.0",
@@ -12,7 +12,8 @@
     "web-component-tester": "^6.0.0",
     "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0",
     "paper-item": "PolymerElements/paper-item#^2.0.0",
-    "iron-flex-layout": "PolymerElements/iron-flex-layout#^2.0.0"
+    "iron-flex-layout": "PolymerElements/iron-flex-layout#^2.0.0",
+    "polymer-decorators": "Polymer/polymer-decorators#^1.0.2"
   },
   "ignore": [
     "/*",
@@ -27,6 +28,6 @@
     "definition": "now-context.d.ts"
   },
   "resolutions": {
-    "polymer": "master"
+    "polymer": "2.5.0"
   }
 }

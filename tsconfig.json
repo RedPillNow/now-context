@@ -26,6 +26,7 @@
 		"**/*.ts",
 		"test/*.ts",
 		"test/**/*.ts",
-		"bower_components/polymer/**/*.d.ts"
+		"bower_components/polymer/**/*.d.ts",
+		"bower_components/polymer-decorators/**/*.d.ts"
 	]
 }
