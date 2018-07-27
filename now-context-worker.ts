@@ -45,12 +45,12 @@ onmessage = (msgEvt) => {
 function makeRequest(ajax): any {
 	return new Promise((resolve, reject) => {
 		let xhr = new XMLHttpRequest();
-		if (ajax.withCredentials && ajax.authorization) {
-			xhr.setRequestHeader('Authorization', 'Basic ' + btoa(ajax.userAuthorizationString));
-			xhr.withCredentials = true;
-		}
 		xhr.responseType = ajax.responseType || 'json';
+		xhr.withCredentials = ajax.withCredentials || false;
 		xhr.open(ajax.method, ajax.url, true);
+		if (ajax.userAuthorizationString) {
+			xhr.setRequestHeader('Authorization', 'Basic ' + btoa(ajax.userAuthorizationString));
+		}
 		xhr.onload = function (evt: any) {
 			if (xhr.status >= 200 && xhr.status < 300) {
 				resolve({ xhr: xhr, response: xhr.response });
