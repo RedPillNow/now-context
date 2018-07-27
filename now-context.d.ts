@@ -1,5 +1,6 @@
 declare namespace Now {
     class AjaxRequest {
+        private _authorization;
         private _method;
         private _params;
         private _payload;
@@ -8,8 +9,10 @@ declare namespace Now {
         private _requestUrl;
         private _status;
         private _statusText;
+        private _userAuthorizationString;
         private _withCredentials;
         constructor(obj?: any);
+        authorization: string;
         method: string;
         params: any;
         payload: any;
@@ -18,6 +21,7 @@ declare namespace Now {
         requestUrl: string;
         status: number;
         statusText: string;
+        userAuthorizationString: string;
         withCredentials: boolean;
     }
     class ContextItem {
@@ -82,6 +86,7 @@ declare namespace NowElements {
         url: string;
         responseType?: string;
         withCredentials?: boolean;
+        userAuthorizationString?: string;
     };
     type ReqResFetchConfig = {
         id?: string | number;

@@ -10,6 +10,12 @@ var Now;
         constructor(obj) {
             Object.assign(this, obj);
         }
+        get authorization() {
+            return this._authorization;
+        }
+        set authorization(authorization) {
+            this._authorization = authorization;
+        }
         get method() {
             return this._method;
         }
@@ -57,6 +63,12 @@ var Now;
         }
         set statusText(statusText) {
             this._statusText = statusText;
+        }
+        get userAuthorizationString() {
+            return this._userAuthorizationString;
+        }
+        set userAuthorizationString(userAuthorizationString) {
+            this._userAuthorizationString = userAuthorizationString;
         }
         get withCredentials() {
             return this._withCredentials;

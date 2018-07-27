@@ -29,6 +29,10 @@ onmessage = (msgEvt) => {
 function makeRequest(ajax) {
     return new Promise((resolve, reject) => {
         let xhr = new XMLHttpRequest();
+        if (ajax.withCredentials && ajax.authorization) {
+            xhr.setRequestHeader('Authorization', 'Basic ' + btoa(ajax.userAuthorizationString));
+            xhr.withCredentials = true;
+        }
         xhr.responseType = ajax.responseType || 'json';
         xhr.open(ajax.method, ajax.url, true);
         xhr.onload = function (evt) {

@@ -39,14 +39,16 @@ onmessage = (msgEvt) => {
 }
 /**
  * Makes a request to the server and returns a promise
- * @param {string} method
- * @param {string} url
- * @param {string} responseType
+ * @param {Now.AjaxRequest} ajax
  * @returns {Promise}
  */
 function makeRequest(ajax): any {
 	return new Promise((resolve, reject) => {
 		let xhr = new XMLHttpRequest();
+		if (ajax.withCredentials && ajax.authorization) {
+			xhr.setRequestHeader('Authorization', 'Basic ' + btoa(ajax.userAuthorizationString));
+			xhr.withCredentials = true;
+		}
 		xhr.responseType = ajax.responseType || 'json';
 		xhr.open(ajax.method, ajax.url, true);
 		xhr.onload = function (evt: any) {

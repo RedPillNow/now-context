@@ -1,6 +1,7 @@
 namespace Now {
 
 	export class AjaxRequest {
+		private _authorization: string;
 		private _method: string;
 		private _params: any;
 		private _payload: any;
@@ -9,10 +10,19 @@ namespace Now {
 		private _requestUrl: string;
 		private _status: number;
 		private _statusText: string;
+		private _userAuthorizationString: string;
 		private _withCredentials: boolean;
 
 		constructor(obj?: any) {
 			Object.assign(this, obj);
+		}
+
+		get authorization() {
+			return this._authorization;
+		}
+
+		set authorization(authorization) {
+			this._authorization = authorization;
 		}
 
 		get method() {
@@ -77,6 +87,14 @@ namespace Now {
 
 		set statusText(statusText) {
 			this._statusText = statusText;
+		}
+
+		get userAuthorizationString() {
+			return this._userAuthorizationString;
+		}
+
+		set userAuthorizationString(userAuthorizationString) {
+			this._userAuthorizationString = userAuthorizationString;
 		}
 
 		get withCredentials() {
@@ -433,6 +451,12 @@ namespace NowElements {
 		 * @type {boolean}
 		 */
 		withCredentials?: boolean;
+		/**
+		 * The `username:password` string to send to the server
+		 * for authorization
+		 * @type {string}
+		 */
+		userAuthorizationString?: string;
 	};
 	/**
 	 * Type representing the properties to set when making a fetch from now-context
@@ -733,8 +757,8 @@ namespace NowElements {
 		 * A request response function. This is mainly used for doing an ajax
 		 * call. Will return a promise which can then be used to do something
 		 * once the request is finished
-		 * @param {any} payload
-		 * @property {any} payload.ajax Should contain an object with all the appropriate values to do the AJAX request
+		 * @param {NowElements.ReqResFetchConfig} payload
+		 * @property {NowElements.ReqResFetchAjaxConfig} payload.ajax Should contain an object with all the appropriate values to do the AJAX request
 		 * @property {string} payload.ajax.method
 		 * @property {string} payload.ajax.url
 		 * @property {any} payload.ajax.payload If doing something other than a GET this is the payload to send to the server
@@ -750,7 +774,7 @@ namespace NowElements {
 		 * This creates a promise and listener to pass along to the worker. It sends the payload
 		 * to the worker which then does the request.
 		 * @private
-		 * @param {any} payload
+		 * @param {NowElements.ReqResFetchConfig} payload
 		 * @property {string} idKey The key for the ID
 		 * @property {any} payload.ajax Should contain an object with all the appropriate values to do the AJAX request
 		 * @property {string} payload.ajax.method
