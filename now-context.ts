@@ -831,5 +831,3 @@ namespace NowElements {
 		}
 	}
 }
-
-customElements.define(NowElements.NowContext.is, NowElements.NowContext);
