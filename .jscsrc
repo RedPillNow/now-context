@@ -22,6 +22,6 @@
 	"excludeFiles": [
 		"node_modules/**",
 		"bower_components/**",
-		"*.js"
+		"**/*.js"
 	]
 }

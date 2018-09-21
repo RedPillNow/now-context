@@ -55,5 +55,4 @@ function makeRequest(ajax) {
         }
     });
 }
-
 //# sourceMappingURL=now-context-worker.js.map

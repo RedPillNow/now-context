@@ -1,6 +1,16 @@
-<link rel="import" href="../../paper-item/paper-item.html">
-<dom-module id="now-context-test">
-	<template>
+import { PolymerElement, html } from '@polymer/polymer/polymer-element';
+import {customElement, property} from '@polymer/decorators';
+import '@polymer/paper-item/paper-item.js';
+
+declare var NowContext;
+@customElement('now-context-test')
+export class NowContextTest extends PolymerElement {
+	static is = 'now-context-test';
+	get is() {
+		return NowContextTest.is;
+	}
+	static get template() {
+		return html `
 		<style>
 			:host {
 				display: block;
@@ -55,6 +65,7 @@
 			<p>In order to access the context there is a global variable called "NowContext.store". This will be the context object which contains all the responses (that were different).</p>
 			<p>If an item does not have an id (for example the response was an array) then the url will be the key, otherwise the id is the key.</p>
 			<p class="note">Open the console to see relevant messages</p>
+		</div>
 		<div id="contextDisplay">
 			<template is="dom-repeat" items="{{contextDisplay}}" as="contextItem">
 				<paper-item>
@@ -74,37 +85,32 @@
 				</paper-item>
 			</template>
 		</div>
-	</template>
-	<script>
-class NowContextTest extends Polymer.Element {
-	static get is() { return 'now-context-test' }
-
-	static get properties() {
-		return {
-			context: {
-				type: Object,
-				notify: true
-			},
-			count: {
-				type: Number,
-				value: 0
-			},
-			getReqCount: {
-				type: Number,
-				value: 0
-			},
-			contextDisplay: {
-				type: String,
-				notify: true,
-				value: []
-			},
-			getSameDisabled: {
-				type: Boolean,
-				value: true,
-				computed: '_isGetSameDisabled(count)'
-			}
-		};
+		`;
 	}
+
+	@property({
+		type: Object,
+		notify: true
+	})
+	context: any;
+
+	@property({type: Number})
+	count: number = 0;
+
+	@property({type: Number})
+	getReqCount: number = 0;
+
+	@property({
+		type: Array,
+		notify: true
+	})
+	contextDisplay: any[];
+
+	@property({
+		type: Boolean,
+		computed: '_isGetSameDisabled(count)'
+	})
+	getSameDisabled: boolean = true;
 
 	connectedCallback() {
 		super.connectedCallback();
@@ -191,6 +197,3 @@ class NowContextTest extends Polymer.Element {
 		alert('This is produced from the PubSub running the listener for customEvent on ' +  NowContextTest.is);
 	}
 }
-customElements.define(NowContextTest.is, NowContextTest);
-	</script>
-</dom-module>

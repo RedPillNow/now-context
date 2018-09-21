@@ -1,3 +1,6 @@
+import {customElement, property} from '@polymer/decorators';
+import { PolymerElement, html } from '@polymer/polymer';
+
 namespace Now {
 
 	export class AjaxRequest {
@@ -205,7 +208,7 @@ namespace Now {
 		private _resolve: any;
 		private _reject: any;
 		private _id: number;
-		protected _handler: any;
+		// protected _handler: any;
 
 		constructor(eventName, handler, context?) {
 			super(eventName, handler, context);
@@ -217,10 +220,6 @@ namespace Now {
 
 		set id(id) {
 			this._id = id;
-		}
-
-		get handler() {
-			return super.handler;
 		}
 
 		set handler(handler) {
@@ -414,7 +413,6 @@ namespace Now {
 	}
 }
 
-const {customElement, property} = Polymer.decorators;
 namespace NowElements {
 	/**
 	 * Type representing the properties to set on a Now.AjaxRequest provided by
@@ -498,8 +496,20 @@ namespace NowElements {
 	 * @author Keith Strickland <keith@redpillnow.com>
 	 */
 	@customElement('now-context')
-	export class NowContext extends Polymer.Element {
+	export class NowContext extends PolymerElement {
 		static is: string = 'now-context';
+		static get template() {
+			return html `
+				<style>
+					:host {
+						display: none;
+					}
+				</style>
+			`;
+		}
+		static get importMeta() {
+			return import.meta;
+		}
 		/**
 		 * This is the stored context to allow data-binding
 		 * @type {any}
@@ -547,6 +557,8 @@ namespace NowElements {
 		 * @type {Worker}
 		 */
 		private worker: Worker;
+
+		private onWorkerMsg = null;
 		/**
 		 * This is to keep track of a Promise's resolve/reject methods
 		 * @type {number}
@@ -571,8 +583,8 @@ namespace NowElements {
 			super.connectedCallback();
 			window.NowContext = this;
 			if (window.Worker) {
-				this.worker = new Worker(this.resolveUrl('now-context-worker.js'));
-				(<any>this).onWorkerMsg = this._onWorkerMsg.bind(this);
+				this.worker = new Worker(this.resolveUrl('./now-context-worker.js'));
+				this.onWorkerMsg = this._onWorkerMsg.bind(this);
 				this.worker.addEventListener('message', (<any>this).onWorkerMsg);
 			} else {
 				console.warn('now-context requires a browser that supports Web Workers! You may experience erratic and undependable behavior of this element.');

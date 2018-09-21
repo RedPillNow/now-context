@@ -4,6 +4,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+import { customElement, property } from '@polymer/decorators';
+import { PolymerElement, html } from '@polymer/polymer';
 var Now;
 (function (Now) {
     class AjaxRequest {
@@ -162,9 +164,6 @@ var Now;
         set id(id) {
             this._id = id;
         }
-        get handler() {
-            return super.handler;
-        }
         set handler(handler) {
             this._handler = handler;
         }
@@ -298,19 +297,32 @@ var Now;
     }
     Now.PubSub = PubSub;
 })(Now || (Now = {}));
-const { customElement, property } = Polymer.decorators;
 var NowElements;
 (function (NowElements) {
-    let NowContext = NowContext_1 = class NowContext extends Polymer.Element {
+    var NowContext_1;
+    let NowContext = NowContext_1 = class NowContext extends PolymerElement {
         constructor() {
             super();
             this.UPDATED_EVENT = Symbol('nowContextItemUpdated');
             this.ADDED_EVENT = Symbol('nowContextItemAdded');
             this.DELETED_EVENT = Symbol('nowContextItemDeleted');
             this._store = {};
+            this.onWorkerMsg = null;
             this.globalId = 0;
             this.reqResListeners = {};
             this.pubsub = new Now.PubSub();
+        }
+        static get template() {
+            return html `
+				<style>
+					:host {
+						display: none;
+					}
+				</style>
+			`;
+        }
+        static get importMeta() {
+            return import.meta;
         }
         get is() {
             return NowContext_1.is;
@@ -322,7 +334,7 @@ var NowElements;
             super.connectedCallback();
             window.NowContext = this;
             if (window.Worker) {
-                this.worker = new Worker(this.resolveUrl('now-context-worker.js'));
+                this.worker = new Worker(this.resolveUrl('./now-context-worker.js'));
                 this.onWorkerMsg = this._onWorkerMsg.bind(this);
                 this.worker.addEventListener('message', this.onWorkerMsg);
             }
@@ -492,8 +504,5 @@ var NowElements;
         customElement('now-context')
     ], NowContext);
     NowElements.NowContext = NowContext;
-    var NowContext_1;
 })(NowElements || (NowElements = {}));
-customElements.define(NowElements.NowContext.is, NowElements.NowContext);
-
 //# sourceMappingURL=now-context.js.map

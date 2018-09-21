@@ -1,13 +1,15 @@
 {
 	"compileOnSave": true,
 	"compilerOptions": {
-		"target": "es2016",
-		"module": "commonjs",
+		"target": "esnext",
+		"module": "esnext",
+		"moduleResolution": "node",
 		"lib": [
 			"dom",
-			"es6",
-			"dom.iterable",
-			"scripthost"
+			"esnext"
+		],
+		"typeRoots": [
+			"node_modules/@types"
 		],
 		"noImplicitAny": false,
 		"removeComments": true,
@@ -20,13 +22,11 @@
 	},
 	"exclude": [
 		"node_modules/**/*.*",
-		"/usr/local/lib/node_modules/**/*"
+		"/usr/local/lib/node_modules/**/*",
+		"test"
 	],
 	"include": [
 		"**/*.ts",
-		"test/*.ts",
-		"test/**/*.ts",
-		"bower_components/polymer/**/*.d.ts",
-		"bower_components/polymer-decorators/**/*.d.ts"
+		"node_modules/@polymer/**/*"
 	]
 }
