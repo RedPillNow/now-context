@@ -38,7 +38,12 @@ function makeRequest(ajax) {
         }
         if (ajax.headers) {
             for (let key in ajax.headers) {
-                xhr.setRequestHeader(key, ajax.headers[key]);
+                if (key === 'Authorization' && ajax.headers[key].indexOf('Basic') === -1) {
+                    xhr.setRequestHeader(key, 'Basic ' + btoa(ajax.headers[key]));
+                }
+                else {
+                    xhr.setRequestHeader(key, ajax.headers[key]);
+                }
             }
         }
         xhr.onload = function (evt) {
