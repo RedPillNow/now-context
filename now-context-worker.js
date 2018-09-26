@@ -31,9 +31,15 @@ function makeRequest(ajax) {
         let xhr = new XMLHttpRequest();
         xhr.responseType = ajax.responseType || 'json';
         xhr.withCredentials = ajax.withCredentials || false;
-        xhr.open(ajax.method, ajax.url, true);
+        let url = ajax.params ? getParamsUrl(ajax.url, ajax.params) : ajax.url;
+        xhr.open(ajax.method, url, true);
         if (ajax.userAuthorizationString) {
             xhr.setRequestHeader('Authorization', 'Basic ' + btoa(ajax.userAuthorizationString));
+        }
+        if (ajax.headers) {
+            for (let key in ajax.headers) {
+                xhr.setRequestHeader(key, ajax.headers[key]);
+            }
         }
         xhr.onload = function (evt) {
             if (xhr.status >= 200 && xhr.status < 300) {
@@ -54,6 +60,24 @@ function makeRequest(ajax) {
             xhr.send();
         }
     });
+}
+function getParamsUrl(url, params) {
+    let returnVal = url;
+    if (params) {
+        let count = -1;
+        for (let key in params) {
+            if (count === -1) {
+                returnVal += '?';
+            }
+            else {
+                returnVal += '&';
+            }
+            returnVal += key + '=' + params[key];
+            count = count + 1;
+        }
+        returnVal = encodeURI(returnVal);
+    }
+    return returnVal;
 }
 
 //# sourceMappingURL=now-context-worker.js.map

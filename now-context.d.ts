@@ -87,6 +87,7 @@ declare namespace NowElements {
         responseType?: string;
         withCredentials?: boolean;
         userAuthorizationString?: string;
+        headers?: any;
     };
     type ReqResFetchConfig = {
         id?: string | number;

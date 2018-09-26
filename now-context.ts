@@ -455,8 +455,15 @@ namespace NowElements {
 		 * The `username:password` string to send to the server
 		 * for authorization
 		 * @type {string}
+		 * @deprecated use the headers property instead
 		 */
 		userAuthorizationString?: string;
+		/**
+		 * This is an object with the key being the header name and the value being
+		 * the value for the header
+		 * @type {any}
+		 */
+		headers?: any;
 	};
 	/**
 	 * Type representing the properties to set when making a fetch from now-context

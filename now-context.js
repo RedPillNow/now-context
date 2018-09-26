@@ -494,6 +494,5 @@ var NowElements;
     NowElements.NowContext = NowContext;
     var NowContext_1;
 })(NowElements || (NowElements = {}));
-customElements.define(NowElements.NowContext.is, NowElements.NowContext);
 
 //# sourceMappingURL=now-context.js.map
