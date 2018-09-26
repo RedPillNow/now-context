@@ -453,8 +453,13 @@ namespace NowElements {
 		 * The `username:password` string to send to the server
 		 * for authorization
 		 * @type {string}
+		 * @deprecated use headers
 		 */
 		userAuthorizationString?: string;
+		/**
+		 * The headers to set as part of the ajax request
+		 */
+		headers?: any;
 	};
 	/**
 	 * Type representing the properties to set when making a fetch from now-context
