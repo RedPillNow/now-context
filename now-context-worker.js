@@ -23,6 +23,7 @@ onmessage = (msgEvt) => {
         postMessage(responseObj, responseObj.aBuf);
     })
         .catch((err) => {
+        postMessage(err, err.aBuf);
         throw new Error(err);
     });
 };
