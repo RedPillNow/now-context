@@ -321,9 +321,6 @@ var NowElements;
 				</style>
 			`;
         }
-        static get importMeta() {
-            return import.meta;
-        }
         get is() {
             return NowContext_1.is;
         }

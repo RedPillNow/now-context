@@ -7,7 +7,7 @@
  * Tests for now-context.
  */
 describe('now-context tests', function () {
-	let element: Now.NowContext;
+	/* let element: Now.NowContext;
 
 	before(function () {
 		element = fixture('now-context');
@@ -24,5 +24,5 @@ describe('now-context tests', function () {
 
 	it('should be instantiated', function() {
 		chai.expect(Now.NowContext.is).equals('now-context');
-	});
+	}); */
 });
