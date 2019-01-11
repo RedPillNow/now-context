@@ -1,0 +1,6 @@
+test
+tools
+tsconfig.json
+polymer.json
+*.ts
+!*.d.ts
