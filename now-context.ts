@@ -512,9 +512,9 @@ namespace NowElements {
 				</style>
 			`;
 		}
-		static get importMeta() {
+		/* static get importMeta() {
 			return import.meta;
-		}
+		} */
 		/**
 		 * This is the stored context to allow data-binding
 		 * @type {any}
