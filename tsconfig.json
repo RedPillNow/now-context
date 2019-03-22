@@ -2,8 +2,8 @@
 	"compileOnSave": true,
 	"compilerOptions": {
 		"rootDir": "./",
-		"target": "es2015",
-		"module": "es2015",
+		"target": "es6",
+		"module": "esNext",
 		"moduleResolution": "node",
 		"lib": [
 			"dom",
@@ -14,10 +14,11 @@
 		"typeRoots": [
 			"node_modules/@types"
 		],
+		"noImplicitAny": false,
 		"noImplicitReturns": true,
 		"noImplicitThis": true,
-		"suppressImplicitAnyIndexErrors": true,
 		"strictNullChecks": true,
+		"suppressImplicitAnyIndexErrors": true,
 		"noUnusedLocals": false,
 		"removeComments": true,
 		"preserveConstEnums": true,
@@ -26,6 +27,6 @@
 		"listFiles": true,
 		"listEmittedFiles": true,
 		"noEmitOnError": true,
-		"declaration": true
+		"skipLibCheck": true
 	}
 }
