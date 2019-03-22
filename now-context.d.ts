@@ -111,9 +111,9 @@ export declare class NowContext extends PolymerElement {
     private _createContextItem;
     private _updateContext;
     private _getContextKey;
-    addStoreItem(item: any, idKey: string): ContextItem;
-    removeStoreItem(itemId: any): ContextItem;
-    findContextItem(contextItemKey: any): ContextItem;
+    addStoreItem(item: any, idKey: string): ContextItem | null;
+    removeStoreItem(itemId: any): ContextItem | null;
+    findContextItem(contextItemKey: any): ContextItem | null;
     trigger(eventName: any, data: any): any;
     on(eventName: any, fn: any, context: any): void;
     off(eventName: any, fn: any): void;

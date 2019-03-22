@@ -316,7 +316,7 @@ export class PubSub {
 	 * @param {boolean} [isReqRes]
 	 */
 	private createListener(eventName: any, fn: any, context?: any, isReqRes?: boolean) {
-		let listener = null;
+		let listener: any = null;
 		if (isReqRes) {
 			listener = new ReqResListener(eventName, fn, context);
 		} else {
@@ -350,18 +350,15 @@ export class PubSub {
 	 * @param {any} data will be passed to the listeners of the event
 	 */
 	trigger(eventName: any, data): void {
-		let executedListeners = [];
-		let returnVal = null;
+		let executedListeners: PubSubListener[]= [];
 		if (this.events[eventName]) {
 			let listeners = this.events[eventName].listeners;
 			listeners.forEach((listener: PubSubListener) => {
 				if (listener.context && listener.handler && listener.handler.call) {
 					executedListeners.push(listener);
-					returnVal = listener.handler.call(listener.context, data);
 				} else {
 					if (listener.handler && typeof listener.handler === 'function') {
 						executedListeners.push(listener);
-						returnVal = listener.handler(data);
 					} else {
 						throw new Error('It appears that the ' + eventName + ' handler is not a function!');
 					}
@@ -369,7 +366,6 @@ export class PubSub {
 			});
 		}
 		this._updateHistory(eventName, executedListeners, data);
-		return returnVal;
 	}
 	/**
 	 * Determine if a listener already exists for a particular event. We can only
@@ -610,7 +606,7 @@ export class NowContext extends PolymerElement {
 	 * @param {AjaxRequest} ajaxRequest
 	 * @returns {ContextItem}
 	 */
-	private _createContextItem(ajaxRequest: AjaxRequest, idKey: string): ContextItem {
+	private _createContextItem(ajaxRequest: AjaxRequest, idKey: string): ContextItem|null {
 		if (ajaxRequest) {
 			let contextItem = new ContextItem();
 			contextItem.idKey = idKey;
@@ -644,17 +640,20 @@ export class NowContext extends PolymerElement {
 			let response = ajaxReq.response;
 			if (response) {
 				let contextItem = this._createContextItem(ajaxReq, detail.idKey);
-				let contextItemKey = this._getContextKey(ajaxReq, contextItem);
-				let existingContextItem = this.findContextItem(contextItemKey);
-				let evtName = this.ADDED_EVENT;
-				if (existingContextItem) {
-					contextItem = Object.assign(existingContextItem, contextItem);
-					evtName = this.UPDATED_EVENT;
+				if (contextItem) {
+					let contextItemKey = this._getContextKey(ajaxReq, contextItem);
+					let existingContextItem = this.findContextItem(contextItemKey);
+					let evtName = this.ADDED_EVENT;
+					if (existingContextItem) {
+						contextItem = Object.assign(existingContextItem, contextItem);
+						evtName = this.UPDATED_EVENT;
+					}
+					this.addStoreItem(contextItem, contextItemKey);
+					this.trigger(evtName, contextItem);
+					return true;
 				}
-				this.addStoreItem(contextItem, contextItemKey);
-				this.trigger(evtName, contextItem);
-				return true;
 			}
+			return false;
 		} catch (e) {
 			return false;
 		}
@@ -668,7 +667,7 @@ export class NowContext extends PolymerElement {
 	 * @returns {string}
 	 */
 	private _getContextKey(ajaxReq: AjaxRequest, contextItem: ContextItem): string {
-		let contextItemKey = null;
+		let contextItemKey: string|null = null;
 		if (Array.isArray(ajaxReq.response) || (!contextItem.id && contextItem.idKey === 'url')) {
 			contextItemKey = ajaxReq.requestUrl;
 		} else {
@@ -682,10 +681,10 @@ export class NowContext extends PolymerElement {
 	 * @param {any} idKey
 	 * @returns {ContextItem} Item added/updated
 	 */
-	addStoreItem(item: any, idKey: string): ContextItem {
-		let contextItem = null;
-		let contextItemKey = null;
-		if (item instanceof ContextItem) {
+	addStoreItem(item: any, idKey: string): ContextItem|null {
+		let contextItem: ContextItem|null = null;
+		let contextItemKey: string|number|null = null;
+		if (contextItem && item instanceof ContextItem) {
 			contextItem = item;
 		} else {
 			contextItem = new ContextItem();
@@ -715,7 +714,7 @@ export class NowContext extends PolymerElement {
 	 * @param {any} itemId
 	 * @returns {ContextItem} Item removed from the store
 	 */
-	removeStoreItem(itemId): ContextItem {
+	removeStoreItem(itemId): ContextItem|null {
 		let contextItem = this.findContextItem(itemId);
 		if (contextItem) {
 			delete this._store[contextItem.id];
@@ -733,7 +732,7 @@ export class NowContext extends PolymerElement {
 	 * @param {any} contextItemKey
 	 * @returns {ContextItem}
 	 */
-	findContextItem(contextItemKey): ContextItem {
+	findContextItem(contextItemKey): ContextItem|null {
 		let context = this.store;
 		if (context.hasOwnProperty(contextItemKey)) {
 			return context[contextItemKey];

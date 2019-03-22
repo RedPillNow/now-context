@@ -243,18 +243,15 @@ export class PubSub {
     }
     trigger(eventName, data) {
         let executedListeners = [];
-        let returnVal = null;
         if (this.events[eventName]) {
             let listeners = this.events[eventName].listeners;
             listeners.forEach((listener) => {
                 if (listener.context && listener.handler && listener.handler.call) {
                     executedListeners.push(listener);
-                    returnVal = listener.handler.call(listener.context, data);
                 }
                 else {
                     if (listener.handler && typeof listener.handler === 'function') {
                         executedListeners.push(listener);
-                        returnVal = listener.handler(data);
                     }
                     else {
                         throw new Error('It appears that the ' + eventName + ' handler is not a function!');
@@ -263,7 +260,6 @@ export class PubSub {
             });
         }
         this._updateHistory(eventName, executedListeners, data);
-        return returnVal;
     }
     _listenerExists(eventName, fn, context) {
         if (eventName && context) {
@@ -351,17 +347,20 @@ let NowContext = NowContext_1 = class NowContext extends PolymerElement {
             let response = ajaxReq.response;
             if (response) {
                 let contextItem = this._createContextItem(ajaxReq, detail.idKey);
-                let contextItemKey = this._getContextKey(ajaxReq, contextItem);
-                let existingContextItem = this.findContextItem(contextItemKey);
-                let evtName = this.ADDED_EVENT;
-                if (existingContextItem) {
-                    contextItem = Object.assign(existingContextItem, contextItem);
-                    evtName = this.UPDATED_EVENT;
+                if (contextItem) {
+                    let contextItemKey = this._getContextKey(ajaxReq, contextItem);
+                    let existingContextItem = this.findContextItem(contextItemKey);
+                    let evtName = this.ADDED_EVENT;
+                    if (existingContextItem) {
+                        contextItem = Object.assign(existingContextItem, contextItem);
+                        evtName = this.UPDATED_EVENT;
+                    }
+                    this.addStoreItem(contextItem, contextItemKey);
+                    this.trigger(evtName, contextItem);
+                    return true;
                 }
-                this.addStoreItem(contextItem, contextItemKey);
-                this.trigger(evtName, contextItem);
-                return true;
             }
+            return false;
         }
         catch (e) {
             return false;
@@ -381,7 +380,7 @@ let NowContext = NowContext_1 = class NowContext extends PolymerElement {
     addStoreItem(item, idKey) {
         let contextItem = null;
         let contextItemKey = null;
-        if (item instanceof ContextItem) {
+        if (contextItem && item instanceof ContextItem) {
             contextItem = item;
         }
         else {
