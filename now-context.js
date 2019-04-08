@@ -315,14 +315,6 @@ let NowContext = NowContext_1 = class NowContext extends PolymerElement {
     connectedCallback() {
         super.connectedCallback();
         window.NowContext = this;
-        if (window.Worker) {
-            this.worker = new Worker(this.resolveUrl('./now-context-worker.js'));
-            this.onWorkerMsg = this._onWorkerMsg.bind(this);
-            this.worker.addEventListener('message', this.onWorkerMsg);
-        }
-        else {
-            console.warn('now-context requires a browser that supports Web Workers! You may experience erratic and undependable behavior of this element.');
-        }
         const loadedEvt = new CustomEvent('now-context-loaded', { detail: this });
         document.dispatchEvent(loadedEvt);
     }
