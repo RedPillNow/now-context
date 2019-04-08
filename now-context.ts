@@ -580,13 +580,13 @@ export class NowContext extends PolymerElement {
 		// Create a global for interacting with this element
 		super.connectedCallback();
 		window.NowContext = this;
-		if (window.Worker) {
+		/* if (window.Worker) {
 			this.worker = new Worker(this.resolveUrl('./now-context-worker.js'));
 			this.onWorkerMsg = this._onWorkerMsg.bind(this);
 			this.worker.addEventListener('message', (<any>this).onWorkerMsg);
 		} else {
 			console.warn('now-context requires a browser that supports Web Workers! You may experience erratic and undependable behavior of this element.');
-		}
+		} */
 		const loadedEvt = new CustomEvent('now-context-loaded', { detail: this });
 		document.dispatchEvent(loadedEvt);
 	}
@@ -779,6 +779,7 @@ export class NowContext extends PolymerElement {
 	 * @property {string} payload.ajax.responseType
 	 * @property {string} payload.idKey The key in the model which is the ID
 	 * @returns {Promise}
+	 * @deprecated
 	 */
 	fetch(payload): any {
 		return this._sendWorkerMsg(payload);
@@ -796,6 +797,7 @@ export class NowContext extends PolymerElement {
 	 * @property {any} payload.ajax.params The url parameters
 	 * @property {string} payload.ajax.responseType
 	 * @returns {Promise}
+	 * @deprecated
 	 */
 	private _sendWorkerMsg(payload): any {
 		const msgId = this.globalId++;
@@ -821,6 +823,7 @@ export class NowContext extends PolymerElement {
 	 * @property {any} evt.data
 	 * @property {AjaxRequest} evt.data.ajaxReq
 	 * @property {number} evt.data.id
+	 * @deprecated
 	 */
 	private _onWorkerMsg(evt: MessageEvent) {
 		let data = evt.data;
