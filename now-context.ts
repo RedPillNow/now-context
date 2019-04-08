@@ -596,9 +596,9 @@ export class NowContext extends PolymerElement {
 	 */
 	disconnectedCallback() {
 		super.disconnectedCallback();
-		if (window.Worker) {
+		/* if (window.Worker) {
 			this.worker.removeEventListener('message', (<any>this).onWorkerMsg);
-		}
+		} */
 	}
 	/**
 	 * Get a ContextItem based on the ironRequest

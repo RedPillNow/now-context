@@ -320,9 +320,6 @@ let NowContext = NowContext_1 = class NowContext extends PolymerElement {
     }
     disconnectedCallback() {
         super.disconnectedCallback();
-        if (window.Worker) {
-            this.worker.removeEventListener('message', this.onWorkerMsg);
-        }
     }
     _createContextItem(ajaxRequest, idKey) {
         if (ajaxRequest) {
