@@ -269,8 +269,11 @@ let NowContext = NowContext_1 = class NowContext extends PolymerElement {
                 contextItemKey = new Date().getTime();
             }
         }
-        else {
+        else if (!idKey) {
             contextItemKey = contextItem.id;
+        }
+        else {
+            contextItemKey = idKey;
         }
         this._store[contextItemKey] = contextItem;
         this._setContext(this.store);

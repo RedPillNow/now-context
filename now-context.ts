@@ -474,80 +474,6 @@ export class NowContext extends PolymerElement {
 		super.disconnectedCallback();
 	}
 	/**
-	 * Get a ContextItem based on the ironRequest
-	 * @param {any} ironRequest
-	 * @param {AjaxRequest} ajaxRequest
-	 * @returns {ContextItem}
-	 */
-	/* private _createContextItem(ajaxRequest: AjaxRequest, idKey: string): ContextItem|null {
-		if (ajaxRequest) {
-			let contextItem = new ContextItem();
-			contextItem.idKey = idKey;
-			contextItem.model = ajaxRequest.response;
-			contextItem.lastAjaxRequest = ajaxRequest;
-			return contextItem;
-		}
-		return null;
-	} */
-	/**
-	 * Update this elements context property with the new ajax response
-	 * @private
-	 * @param {any} ironRequest The iron-request element
-	 * @param {any} ajax The iron-ajax element
-	 * @param {any} detail
-	 * @property {string} detail.ajax.idKey - The key that is the ID of the model
-	 * @property {any} detail.ajax.payload
-	 * @property {any} detail.ajax.parameters
-	 * @property {string} detail.ajax.contentType
-	 * @property {string} detail.ajax.handleAs
-	 * @property {string} detail.ajax.url
-	 * @property {any} detail.context
-	 * @property {HTMLElement} detail.context.element
-	 * @property {any} detail.context.model
-	 * @event nowContextItemUpdated
-	 * @event nowContextItemAdded
-	 * @returns {boolean}
-	 */
-	/* private _updateContext(ajaxReq: AjaxRequest, detail: any): boolean {
-		try {
-			let response = ajaxReq.response;
-			if (response) {
-				let contextItem = this._createContextItem(ajaxReq, detail.idKey);
-				if (contextItem) {
-					let contextItemKey = this._getContextKey(ajaxReq, contextItem);
-					let existingContextItem = this.findContextItem(contextItemKey);
-					let evtName = this.ADDED_EVENT;
-					if (existingContextItem) {
-						contextItem = Object.assign(existingContextItem, contextItem);
-						evtName = this.UPDATED_EVENT;
-					}
-					this.addStoreItem(contextItem, contextItemKey);
-					this.trigger(evtName, contextItem);
-					return true;
-				}
-			}
-			return false;
-		} catch (e) {
-			return false;
-		}
-		return false;
-	} */
-	/**
-	 * Determine the context key and return it
-	 * @private
-	 * @param {ContextItem} contextItem
-	 * @returns {string}
-	 */
-	/* private _getContextKey(contextItem: ContextItem): string {
-		let contextItemKey: string|null = null;
-		if (!contextItem.id && contextItem.idKey) {
-			contextItemKey = contextItem.idKey;
-		} else {
-			contextItemKey = contextItem.id;
-		}
-		return contextItemKey;
-	} */
-	/**
 	 * Add an item to the store. This should be the only way possible of adding to the store
 	 * @param {any} item
 	 * @param {any} idKey
@@ -569,8 +495,10 @@ export class NowContext extends PolymerElement {
 			if (!contextItemKey) {
 				contextItemKey = new Date().getTime();
 			}
-		} else {
+		} else if (!idKey) {
 			contextItemKey = contextItem.id;
+		}else {
+			contextItemKey = idKey;
 		}
 		this._store[contextItemKey] = contextItem;
 		// The _setContext method is part of Polymer: bower_components/Polymer/lib/mixins/property-effects.html
