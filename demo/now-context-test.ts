@@ -19,73 +19,10 @@ export class NowContextTest extends PolymerElement {
 				font-size: 14px;
 				line-height: 1.5;
 			}
-			paper-item:first-child {
-				margin-top: 10px;
-			}
-			paper-item {
-				margin-bottom: 10px;
-				--paper-item: {
-					border: 1px solid #afafaf;
-				};
-			}
-			.label {
-				font-size: 12px;
-			}
-			.value {
-				font-size: 13px;
-				font-weight: 500;
-			}
-			.title .value {
-				font-size: 14px;
-				font-weight: 600;
-			}
-			.getRequestCount {
-				font-size: 12px;
-			}
-			.note {
-				font-style: italic;
-				font-weight: 600;
-			}
 		</style>
 		<div class="layout horizontal">
-			<button on-click="getNext">Get Next</button>
-			<button on-click="getSame" disabled$="{{getSameDisabled}}">Get Same Record Again</button>
-			<button on-click="getPosts">Get Posts</button>
-			<button id="clearContext" on-click="clearDisplay">Clear Display</button>
 			<button id="triggerEvt" on-click="triggerEvent">Trigger Event</button>
-			<span class="flex"></span>
-			<div class="getRequestCount">
-				<span
-					title="The number of network requests made. Driven by the now-context PubSub system">
-					{{getReqCount}} GET requests have been made
-				</span>
-			</div>
-		</div>
-		<div>
-			<p>In order to access the context there is a global variable called "NowContext.store". This will be the context object which contains all the responses (that were different).</p>
-			<p>If an item does not have an id (for example the response was an array) then the url will be the key, otherwise the id is the key.</p>
-			<p class="note">Open the console to see relevant messages</p>
-		</div>
-		<div id="contextDisplay">
-			<template is="dom-repeat" items="{{contextDisplay}}" as="contextItem">
-				<paper-item>
-					<div class="layout vertical">
-						<div class="layout horizontal title">
-							<span class="value">{{contextItem.title}}</span>
-						</div>
-						<div class="layout horizontal">
-							<span class="label">{{contextItem.idKey}}:</span>
-							<span class="value">{{contextItem.id}}</span>
-						</div>
-						<div class="layout horizontal">
-							<span class="label">URL:</span>
-							<span class="value">{{contextItem.url}}</span>
-						</div>
-					</div>
-				</paper-item>
-			</template>
-		</div>
-		`;
+		</div>`;
 	}
 
 	@property({
@@ -138,62 +75,16 @@ export class NowContextTest extends PolymerElement {
 		}
 	}
 
-	getNext(evt, detail) {
-		this.count++;
-		NowContext.fetch(this.getReqResPayload())
-			.then((ajaxReq) => {
-				this.getReqCount++;
-			});
-	}
-
-	getSame(evt, detail) {
-		if (this.count > 0) {
-			NowContext.fetch(this.getReqResPayload())
-				.then((ajaxReq) => {
-					this.getReqCount++;
-				});
-		}
-	}
-
-	getReqResPayload() {
-		return {
-			ajax: {
-				method: 'GET',
-				url: 'https://jsonplaceholder.typicode.com/posts/' + this.count,
-				idKey: 'id'
-			},
-			idKey: 'id'
-		};
-	}
-
-	getPosts(evt, detail) {
-		let payload = {
-			ajax: {
-				method: 'GET',
-				url: 'https://jsonplaceholder.typicode.com/posts'
-			},
-			idKey: 'url'
-		}
-		NowContext.fetch(payload)
-			.then((ajaxReq) => {
-				this.getReqCount++;
-			});
-	}
-
-	clearDisplay(evt) {
-		this.set('contextDisplay', []);
-		this.set('count', 0);
-	}
-
 	onContextItemUpdated(data) {
 		console.log(NowContextTest.is, 'onNowContextContextUpdated, This is the handler for the nowContextItemUpdated pubsub event', data, 'Handler context=', this);
 	}
 
 	triggerEvent(evt) {
-		NowContext.trigger('customEvent');
+		NowContext.trigger('customEvent', {foo: 'bar', baz: 'bam', date: new Date()});
 	}
 
 	onCustomEvent(data) {
+		console.log(this.is, 'onCustomEvent, data=', data);
 		alert('This is produced from the PubSub running the listener for customEvent on ' +  NowContextTest.is);
 	}
 }

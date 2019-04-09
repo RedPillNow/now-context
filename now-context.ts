@@ -1,118 +1,10 @@
 import { customElement, property } from '@polymer/decorators';
 import { PolymerElement, html } from '@polymer/polymer';
 
-
-export class AjaxRequest {
-	private _authorization: string;
-	private _method: string;
-	private _params: any;
-	private _payload: any;
-	private _response: any;
-	private _responseType: string;
-	private _requestUrl: string;
-	private _status: number;
-	private _statusText: string;
-	private _userAuthorizationString: string;
-	private _withCredentials: boolean;
-
-	constructor(obj?: any) {
-		Object.assign(this, obj);
-	}
-
-	get authorization() {
-		return this._authorization;
-	}
-
-	set authorization(authorization) {
-		this._authorization = authorization;
-	}
-
-	get method() {
-		return this._method;
-	}
-
-	set method(method) {
-		this._method = method;
-	}
-
-	get params() {
-		return this._params;
-	}
-
-	set params(params) {
-		this._params = params;
-	}
-
-	get payload() {
-		return this._payload;
-	}
-
-	set payload(payload) {
-		this._payload = payload;
-	}
-
-	get response() {
-		return this._response;
-	}
-
-	set response(response) {
-		this._response = response;
-	}
-
-	get responseType() {
-		return this._responseType;
-	}
-
-	set responseType(responseType) {
-		this._responseType = responseType;
-	}
-
-	get requestUrl() {
-		return this._requestUrl;
-	}
-
-	set requestUrl(requestUrl) {
-		this._requestUrl = requestUrl;
-	}
-
-	get status() {
-		return this._status;
-	}
-
-	set status(status) {
-		this._status = status;
-	}
-
-	get statusText() {
-		return this._statusText;
-	}
-
-	set statusText(statusText) {
-		this._statusText = statusText;
-	}
-
-	get userAuthorizationString() {
-		return this._userAuthorizationString;
-	}
-
-	set userAuthorizationString(userAuthorizationString) {
-		this._userAuthorizationString = userAuthorizationString;
-	}
-
-	get withCredentials() {
-		return this._withCredentials;
-	}
-
-	set withCredentials(withCredentials) {
-		this._withCredentials = withCredentials;
-	}
-}
-
 export class ContextItem {
 	private _element: any;
 	private _id: string;
 	private _idKey: string;
-	private _lastAjaxRequest: AjaxRequest;
 	private _model: any;
 
 	get element() {
@@ -136,14 +28,6 @@ export class ContextItem {
 
 	set idKey(idKey) {
 		this._idKey = idKey;
-	}
-
-	get lastAjaxRequest() {
-		return this._lastAjaxRequest;
-	}
-
-	set lastAjaxRequest(lastAjaxRequest) {
-		this._lastAjaxRequest = lastAjaxRequest;
 	}
 
 	get model() {
@@ -273,7 +157,7 @@ export class PubSubEvent {
  */
 export class PubSub {
 	private _events: any;
-	private _history: any[];
+	private _history: any[] = [];
 
 	constructor() {
 		this._events = {};
@@ -316,7 +200,7 @@ export class PubSub {
 	 * @param {boolean} [isReqRes]
 	 */
 	private createListener(eventName: any, fn: any, context?: any, isReqRes?: boolean) {
-		let listener: any = null;
+		let listener: PubSubListener|ReqResListener|null = null;
 		if (isReqRes) {
 			listener = new ReqResListener(eventName, fn, context);
 		} else {
@@ -355,9 +239,15 @@ export class PubSub {
 			let listeners = this.events[eventName].listeners;
 			listeners.forEach((listener: PubSubListener) => {
 				if (listener.context && listener.handler && listener.handler.call) {
-					executedListeners.push(listener);
+					try {
+						listener.handler.call(listener.context, data);
+						executedListeners.push(listener);
+					}catch(e) {
+						throw new Error('An error occurred executing the listener: ' + e.message);
+					}
 				} else {
 					if (listener.handler && typeof listener.handler === 'function') {
+						listener.handler(data);
 						executedListeners.push(listener);
 					} else {
 						throw new Error('It appears that the ' + eventName + ' handler is not a function!');
@@ -549,14 +439,7 @@ export class NowContext extends PolymerElement {
 	 * @type {PubSub}
 	 */
 	private pubsub: PubSub;
-	/**
-	 * The web worker
-	 * @private
-	 * @type {Worker}
-	 */
-	private worker: Worker;
 
-	private onWorkerMsg = null;
 	/**
 	 * This is to keep track of a Promise's resolve/reject methods
 	 * @type {number}
@@ -580,13 +463,6 @@ export class NowContext extends PolymerElement {
 		// Create a global for interacting with this element
 		super.connectedCallback();
 		window.NowContext = this;
-		/* if (window.Worker) {
-			this.worker = new Worker(this.resolveUrl('./now-context-worker.js'));
-			this.onWorkerMsg = this._onWorkerMsg.bind(this);
-			this.worker.addEventListener('message', (<any>this).onWorkerMsg);
-		} else {
-			console.warn('now-context requires a browser that supports Web Workers! You may experience erratic and undependable behavior of this element.');
-		} */
 		const loadedEvt = new CustomEvent('now-context-loaded', { detail: this });
 		document.dispatchEvent(loadedEvt);
 	}
@@ -596,9 +472,6 @@ export class NowContext extends PolymerElement {
 	 */
 	disconnectedCallback() {
 		super.disconnectedCallback();
-		/* if (window.Worker) {
-			this.worker.removeEventListener('message', (<any>this).onWorkerMsg);
-		} */
 	}
 	/**
 	 * Get a ContextItem based on the ironRequest
@@ -606,7 +479,7 @@ export class NowContext extends PolymerElement {
 	 * @param {AjaxRequest} ajaxRequest
 	 * @returns {ContextItem}
 	 */
-	private _createContextItem(ajaxRequest: AjaxRequest, idKey: string): ContextItem|null {
+	/* private _createContextItem(ajaxRequest: AjaxRequest, idKey: string): ContextItem|null {
 		if (ajaxRequest) {
 			let contextItem = new ContextItem();
 			contextItem.idKey = idKey;
@@ -615,7 +488,7 @@ export class NowContext extends PolymerElement {
 			return contextItem;
 		}
 		return null;
-	}
+	} */
 	/**
 	 * Update this elements context property with the new ajax response
 	 * @private
@@ -635,7 +508,7 @@ export class NowContext extends PolymerElement {
 	 * @event nowContextItemAdded
 	 * @returns {boolean}
 	 */
-	private _updateContext(ajaxReq: AjaxRequest, detail: any): boolean {
+	/* private _updateContext(ajaxReq: AjaxRequest, detail: any): boolean {
 		try {
 			let response = ajaxReq.response;
 			if (response) {
@@ -658,23 +531,22 @@ export class NowContext extends PolymerElement {
 			return false;
 		}
 		return false;
-	}
+	} */
 	/**
 	 * Determine the context key and return it
 	 * @private
-	 * @param {AjaxRequest} ajaxReq
 	 * @param {ContextItem} contextItem
 	 * @returns {string}
 	 */
-	private _getContextKey(ajaxReq: AjaxRequest, contextItem: ContextItem): string {
+	/* private _getContextKey(contextItem: ContextItem): string {
 		let contextItemKey: string|null = null;
-		if (Array.isArray(ajaxReq.response) || (!contextItem.id && contextItem.idKey === 'url')) {
-			contextItemKey = ajaxReq.requestUrl;
+		if (!contextItem.id && contextItem.idKey) {
+			contextItemKey = contextItem.idKey;
 		} else {
 			contextItemKey = contextItem.id;
 		}
 		return contextItemKey;
-	}
+	} */
 	/**
 	 * Add an item to the store. This should be the only way possible of adding to the store
 	 * @param {any} item
@@ -693,13 +565,9 @@ export class NowContext extends PolymerElement {
 		}
 		let protocolRegEx = /(http:|https:){1}/;
 		if (contextItem.idKey === 'url' || protocolRegEx.test(contextItem.idKey)) {
-			if (contextItem.idKey === 'url' && contextItem.lastAjaxRequest) {
-				contextItemKey = (<AjaxRequest>contextItem.lastAjaxRequest).requestUrl;
-			} else {
-				contextItemKey = contextItem.idKey;
-				if (!contextItemKey) {
-					contextItemKey = new Date().getTime();
-				}
+			contextItemKey = contextItem.idKey;
+			if (!contextItemKey) {
+				contextItemKey = new Date().getTime();
 			}
 		} else {
 			contextItemKey = contextItem.id;
@@ -765,84 +633,5 @@ export class NowContext extends PolymerElement {
 	 */
 	off(eventName: any, fn) {
 		this.pubsub.off(eventName, fn);
-	}
-	/**
-	 * A request response function. This is mainly used for doing an ajax
-	 * call. Will return a promise which can then be used to do something
-	 * once the request is finished
-	 * @param {NowElements.ReqResFetchConfig} payload
-	 * @property {NowElements.ReqResFetchAjaxConfig} payload.ajax Should contain an object with all the appropriate values to do the AJAX request
-	 * @property {string} payload.ajax.method
-	 * @property {string} payload.ajax.url
-	 * @property {any} payload.ajax.payload If doing something other than a GET this is the payload to send to the server
-	 * @property {any} payload.ajax.params The url parameters
-	 * @property {string} payload.ajax.responseType
-	 * @property {string} payload.idKey The key in the model which is the ID
-	 * @returns {Promise}
-	 * @deprecated
-	 */
-	fetch(payload): any {
-		return this._sendWorkerMsg(payload);
-	}
-	/**
-	 * This creates a promise and listener to pass along to the worker. It sends the payload
-	 * to the worker which then does the request.
-	 * @private
-	 * @param {NowElements.ReqResFetchConfig} payload
-	 * @property {string} idKey The key for the ID
-	 * @property {any} payload.ajax Should contain an object with all the appropriate values to do the AJAX request
-	 * @property {string} payload.ajax.method
-	 * @property {string} payload.ajax.url
-	 * @property {any} payload.ajax.payload If doing something other than a GET this is the payload to send to the server
-	 * @property {any} payload.ajax.params The url parameters
-	 * @property {string} payload.ajax.responseType
-	 * @returns {Promise}
-	 * @deprecated
-	 */
-	private _sendWorkerMsg(payload): any {
-		const msgId = this.globalId++;
-		let listener: ReqResListener = new ReqResListener('reqRes' + msgId, null);
-		listener.id = msgId;
-		return new Promise((resolve, reject) => {
-			listener.resolve = resolve;
-			listener.reject = reject;
-			this.reqResListeners[msgId] = listener;
-			const msg = {
-				id: msgId,
-				idKey: payload.idKey,
-				ajax: payload.ajax
-			};
-			this.worker.postMessage(msg);
-		});
-	}
-	/**
-	 * Responds to the web worker postMessage event. If processing is successful resolve
-	 * the Promise from _sendWorkerMsg
-	 * @private
-	 * @param {MessageEvent} evt
-	 * @property {any} evt.data
-	 * @property {AjaxRequest} evt.data.ajaxReq
-	 * @property {number} evt.data.id
-	 * @deprecated
-	 */
-	private _onWorkerMsg(evt: MessageEvent) {
-		let data = evt.data;
-		try {
-			let ajaxReq: AjaxRequest = new AjaxRequest(data.ajaxReq);
-			this._updateContext(ajaxReq, { idKey: data.idKey });
-			let listener = this.reqResListeners[data.id];
-			if (listener) {
-				listener.resolve(ajaxReq);
-			} else {
-				throw new Error('Unable to complete request, unable to find Listener with ID ' + data.id);
-			}
-		} catch (err) {
-			let listener = this.reqResListeners[data.id];
-			if (listener) {
-				listener.reject(err);
-			}
-			console.error(err);
-		}
-		delete this.reqResListeners[data.id];
 	}
 }

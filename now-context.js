@@ -7,77 +7,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var NowContext_1;
 import { customElement, property } from '@polymer/decorators';
 import { PolymerElement, html } from '@polymer/polymer';
-export class AjaxRequest {
-    constructor(obj) {
-        Object.assign(this, obj);
-    }
-    get authorization() {
-        return this._authorization;
-    }
-    set authorization(authorization) {
-        this._authorization = authorization;
-    }
-    get method() {
-        return this._method;
-    }
-    set method(method) {
-        this._method = method;
-    }
-    get params() {
-        return this._params;
-    }
-    set params(params) {
-        this._params = params;
-    }
-    get payload() {
-        return this._payload;
-    }
-    set payload(payload) {
-        this._payload = payload;
-    }
-    get response() {
-        return this._response;
-    }
-    set response(response) {
-        this._response = response;
-    }
-    get responseType() {
-        return this._responseType;
-    }
-    set responseType(responseType) {
-        this._responseType = responseType;
-    }
-    get requestUrl() {
-        return this._requestUrl;
-    }
-    set requestUrl(requestUrl) {
-        this._requestUrl = requestUrl;
-    }
-    get status() {
-        return this._status;
-    }
-    set status(status) {
-        this._status = status;
-    }
-    get statusText() {
-        return this._statusText;
-    }
-    set statusText(statusText) {
-        this._statusText = statusText;
-    }
-    get userAuthorizationString() {
-        return this._userAuthorizationString;
-    }
-    set userAuthorizationString(userAuthorizationString) {
-        this._userAuthorizationString = userAuthorizationString;
-    }
-    get withCredentials() {
-        return this._withCredentials;
-    }
-    set withCredentials(withCredentials) {
-        this._withCredentials = withCredentials;
-    }
-}
 export class ContextItem {
     get element() {
         return this._element;
@@ -96,12 +25,6 @@ export class ContextItem {
     }
     set idKey(idKey) {
         this._idKey = idKey;
-    }
-    get lastAjaxRequest() {
-        return this._lastAjaxRequest;
-    }
-    set lastAjaxRequest(lastAjaxRequest) {
-        this._lastAjaxRequest = lastAjaxRequest;
     }
     get model() {
         return this._model;
@@ -195,6 +118,7 @@ export class PubSubEvent {
 }
 export class PubSub {
     constructor() {
+        this._history = [];
         this._events = {};
     }
     get events() {
@@ -247,10 +171,17 @@ export class PubSub {
             let listeners = this.events[eventName].listeners;
             listeners.forEach((listener) => {
                 if (listener.context && listener.handler && listener.handler.call) {
-                    executedListeners.push(listener);
+                    try {
+                        listener.handler.call(listener.context, data);
+                        executedListeners.push(listener);
+                    }
+                    catch (e) {
+                        throw new Error('An error occurred executing the listener: ' + e.message);
+                    }
                 }
                 else {
                     if (listener.handler && typeof listener.handler === 'function') {
+                        listener.handler(data);
                         executedListeners.push(listener);
                     }
                     else {
@@ -292,7 +223,6 @@ let NowContext = NowContext_1 = class NowContext extends PolymerElement {
         this.ADDED_EVENT = Symbol('nowContextItemAdded');
         this.DELETED_EVENT = Symbol('nowContextItemDeleted');
         this._store = {};
-        this.onWorkerMsg = null;
         this.globalId = 0;
         this.reqResListeners = {};
         this.pubsub = new PubSub();
@@ -321,51 +251,6 @@ let NowContext = NowContext_1 = class NowContext extends PolymerElement {
     disconnectedCallback() {
         super.disconnectedCallback();
     }
-    _createContextItem(ajaxRequest, idKey) {
-        if (ajaxRequest) {
-            let contextItem = new ContextItem();
-            contextItem.idKey = idKey;
-            contextItem.model = ajaxRequest.response;
-            contextItem.lastAjaxRequest = ajaxRequest;
-            return contextItem;
-        }
-        return null;
-    }
-    _updateContext(ajaxReq, detail) {
-        try {
-            let response = ajaxReq.response;
-            if (response) {
-                let contextItem = this._createContextItem(ajaxReq, detail.idKey);
-                if (contextItem) {
-                    let contextItemKey = this._getContextKey(ajaxReq, contextItem);
-                    let existingContextItem = this.findContextItem(contextItemKey);
-                    let evtName = this.ADDED_EVENT;
-                    if (existingContextItem) {
-                        contextItem = Object.assign(existingContextItem, contextItem);
-                        evtName = this.UPDATED_EVENT;
-                    }
-                    this.addStoreItem(contextItem, contextItemKey);
-                    this.trigger(evtName, contextItem);
-                    return true;
-                }
-            }
-            return false;
-        }
-        catch (e) {
-            return false;
-        }
-        return false;
-    }
-    _getContextKey(ajaxReq, contextItem) {
-        let contextItemKey = null;
-        if (Array.isArray(ajaxReq.response) || (!contextItem.id && contextItem.idKey === 'url')) {
-            contextItemKey = ajaxReq.requestUrl;
-        }
-        else {
-            contextItemKey = contextItem.id;
-        }
-        return contextItemKey;
-    }
     addStoreItem(item, idKey) {
         let contextItem = null;
         let contextItemKey = null;
@@ -379,14 +264,9 @@ let NowContext = NowContext_1 = class NowContext extends PolymerElement {
         }
         let protocolRegEx = /(http:|https:){1}/;
         if (contextItem.idKey === 'url' || protocolRegEx.test(contextItem.idKey)) {
-            if (contextItem.idKey === 'url' && contextItem.lastAjaxRequest) {
-                contextItemKey = contextItem.lastAjaxRequest.requestUrl;
-            }
-            else {
-                contextItemKey = contextItem.idKey;
-                if (!contextItemKey) {
-                    contextItemKey = new Date().getTime();
-                }
+            contextItemKey = contextItem.idKey;
+            if (!contextItemKey) {
+                contextItemKey = new Date().getTime();
             }
         }
         else {
@@ -423,47 +303,6 @@ let NowContext = NowContext_1 = class NowContext extends PolymerElement {
     }
     off(eventName, fn) {
         this.pubsub.off(eventName, fn);
-    }
-    fetch(payload) {
-        return this._sendWorkerMsg(payload);
-    }
-    _sendWorkerMsg(payload) {
-        const msgId = this.globalId++;
-        let listener = new ReqResListener('reqRes' + msgId, null);
-        listener.id = msgId;
-        return new Promise((resolve, reject) => {
-            listener.resolve = resolve;
-            listener.reject = reject;
-            this.reqResListeners[msgId] = listener;
-            const msg = {
-                id: msgId,
-                idKey: payload.idKey,
-                ajax: payload.ajax
-            };
-            this.worker.postMessage(msg);
-        });
-    }
-    _onWorkerMsg(evt) {
-        let data = evt.data;
-        try {
-            let ajaxReq = new AjaxRequest(data.ajaxReq);
-            this._updateContext(ajaxReq, { idKey: data.idKey });
-            let listener = this.reqResListeners[data.id];
-            if (listener) {
-                listener.resolve(ajaxReq);
-            }
-            else {
-                throw new Error('Unable to complete request, unable to find Listener with ID ' + data.id);
-            }
-        }
-        catch (err) {
-            let listener = this.reqResListeners[data.id];
-            if (listener) {
-                listener.reject(err);
-            }
-            console.error(err);
-        }
-        delete this.reqResListeners[data.id];
     }
 };
 NowContext.is = 'now-context';
