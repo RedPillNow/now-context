@@ -233,22 +233,23 @@ export class PubSub {
 	 * @param {any} eventName
 	 * @param {any} data will be passed to the listeners of the event
 	 */
-	trigger(eventName: any, data): void {
+	trigger(eventName: any, data): any {
 		let executedListeners: PubSubListener[]= [];
+		let returnVal = null;
 		if (this.events[eventName]) {
 			let listeners = this.events[eventName].listeners;
 			listeners.forEach((listener: PubSubListener) => {
 				if (listener.context && listener.handler && listener.handler.call) {
 					try {
-						listener.handler.call(listener.context, data);
 						executedListeners.push(listener);
+						returnVal = listener.handler.call(listener.context, data);
 					}catch(e) {
 						throw new Error('An error occurred executing the listener: ' + e.message);
 					}
 				} else {
 					if (listener.handler && typeof listener.handler === 'function') {
-						listener.handler(data);
 						executedListeners.push(listener);
+						returnVal = listener.handler(data);
 					} else {
 						throw new Error('It appears that the ' + eventName + ' handler is not a function!');
 					}
@@ -256,6 +257,7 @@ export class PubSub {
 			});
 		}
 		this._updateHistory(eventName, executedListeners, data);
+		return returnVal;
 	}
 	/**
 	 * Determine if a listener already exists for a particular event. We can only

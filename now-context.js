@@ -167,13 +167,14 @@ export class PubSub {
     }
     trigger(eventName, data) {
         let executedListeners = [];
+        let returnVal = null;
         if (this.events[eventName]) {
             let listeners = this.events[eventName].listeners;
             listeners.forEach((listener) => {
                 if (listener.context && listener.handler && listener.handler.call) {
                     try {
-                        listener.handler.call(listener.context, data);
                         executedListeners.push(listener);
+                        returnVal = listener.handler.call(listener.context, data);
                     }
                     catch (e) {
                         throw new Error('An error occurred executing the listener: ' + e.message);
@@ -181,8 +182,8 @@ export class PubSub {
                 }
                 else {
                     if (listener.handler && typeof listener.handler === 'function') {
-                        listener.handler(data);
                         executedListeners.push(listener);
+                        returnVal = listener.handler(data);
                     }
                     else {
                         throw new Error('It appears that the ' + eventName + ' handler is not a function!');
@@ -191,6 +192,7 @@ export class PubSub {
             });
         }
         this._updateHistory(eventName, executedListeners, data);
+        return returnVal;
     }
     _listenerExists(eventName, fn, context) {
         if (eventName && context) {
