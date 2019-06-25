@@ -17,12 +17,12 @@
   },
   "devDependencies": {
     "@polymer/decorators": "^3.0.0",
-    "@polymer/iron-demo-helpers": "^3.0.2",
+    "@polymer/iron-demo-helpers": "^3.1.0",
     "@types/mocha": "^5.2.5",
     "@types/node": "^10.10.1",
     "@types/sinon": "^5.0.2",
     "@types/sinon-chai": "^3.2.0",
-    "browser-sync": "^2.24.7",
+    "browser-sync": "^2.26.7",
     "chalk": "^2.4.1",
     "compress": "^0.99.0",
     "compression": "^1.7.3",
@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@polymer/paper-item": "^3.0.1",
-    "@polymer/polymer": "^3.1.0",
-    "@webcomponents/webcomponentsjs": "^2.1.3"
+    "@polymer/polymer": "^3.0.0",
+    "@webcomponents/webcomponentsjs": "^2.0.0"
   }
 }
